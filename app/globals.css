@@ -10,6 +10,7 @@
   --blue-dark: #351531;
   --coral: #789b7a;
   --line: rgba(36, 20, 33, 0.16);
+  --font-ui: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -18,9 +19,9 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
-  line-height: 1.45;
+  font-family: var(--font-ui);
+  font-size: 17px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
@@ -33,7 +34,7 @@ img { display: block; max-width: 100%; }
   color: white;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: .09em;
+  letter-spacing: .07em;
   text-transform: uppercase;
 }
 .topline__inner { min-height: 34px; display: flex; align-items: center; gap: 32px; }
@@ -52,13 +53,13 @@ img { display: block; max-width: 100%; }
   width: 45px; height: 45px; border-radius: 50%;
   display: grid; place-items: center;
   background: var(--blue); color: white;
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 18px; letter-spacing: -.03em;
+  font-family: var(--font-ui);
+  font-size: 17px; font-weight: 800; letter-spacing: 0;
   box-shadow: inset 0 0 0 4px var(--yellow);
 }
 .brand__name {
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 20px; line-height: .84; letter-spacing: -.01em; text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-size: 19px; font-weight: 800; line-height: 1.05; letter-spacing: 0;
 }
 .nav { display: flex; align-items: center; gap: 30px; font-size: 14px; font-weight: 700; }
 .nav a { position: relative; }
@@ -88,15 +89,15 @@ img { display: block; max-width: 100%; }
   padding-top: 58px; padding-bottom: 58px;
   gap: 48px; align-items: center;
 }
-.eyebrow { display: flex; align-items: center; gap: 9px; color: var(--blue); font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { display: flex; align-items: center; gap: 9px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .eyebrow > span { width: 22px; height: 5px; background: var(--coral); border-radius: 99px; }
 .eyebrow--light { color: var(--yellow); }
 .hero h1, .section-heading h2, .agenda h2, .about h2 {
   margin: 18px 0 22px;
-  font-family: Impact, "Arial Black", sans-serif;
-  font-weight: 900; line-height: .9; letter-spacing: -.035em; text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-weight: 800; line-height: 1.02; letter-spacing: -.02em;
 }
-.hero h1 { max-width: 540px; font-size: clamp(65px, 7.2vw, 112px); }
+.hero h1 { max-width: 560px; font-size: clamp(58px, 6vw, 88px); }
 .hero__lead { max-width: 530px; margin: 0; font-size: 19px; line-height: 1.55; color: #434b58; }
 .hero__actions { display: flex; align-items: center; gap: 24px; margin-top: 32px; }
 .text-link { padding: 10px 0; border-bottom: 2px solid var(--ink); font-size: 14px; font-weight: 800; }
@@ -112,18 +113,18 @@ img { display: block; max-width: 100%; }
   display: grid; place-content: center; text-align: center;
   background: var(--coral); color: white; border: 3px solid var(--ink); transform: rotate(-7deg);
 }
-.hero__stamp strong { display: block; font-family: Impact, "Arial Black", sans-serif; font-size: 31px; line-height: 1; }
+.hero__stamp strong { display: block; font-family: var(--font-ui); font-weight: 800; font-size: 29px; line-height: 1; }
 .hero__stamp span { font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 
 .ticker { min-height: 54px; display: flex; background: var(--yellow); border-block: 2px solid var(--ink); overflow: hidden; }
-.ticker__label { flex: none; padding: 0 26px; display: grid; place-items: center; background: var(--coral); color: white; font-family: Impact, "Arial Black", sans-serif; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; }
+.ticker__label { flex: none; padding: 0 26px; display: grid; place-items: center; background: var(--coral); color: white; font-family: var(--font-ui); font-size: 16px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .ticker__track { display: flex; align-items: center; gap: 46px; padding: 0 28px; white-space: nowrap; overflow: hidden; font-size: 13px; font-weight: 800; }
 .ticker__track a { max-width: 460px; overflow: hidden; text-overflow: ellipsis; }
 .ticker__track span { color: var(--coral); font-size: 9px; margin-right: 8px; }
 
 .news-section { padding-block: 98px; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; border-bottom: 2px solid var(--ink); padding-bottom: 24px; }
-.section-heading h2, .agenda h2, .about h2 { font-size: clamp(45px, 6vw, 78px); margin-bottom: 0; }
+.section-heading h2, .agenda h2, .about h2 { font-size: clamp(42px, 5vw, 68px); margin-bottom: 0; }
 .section-heading > p { margin: 0 0 7px; text-align: right; color: #66707d; font-size: 13px; line-height: 1.6; }
 .filters { display: flex; gap: 9px; flex-wrap: wrap; padding-block: 24px 30px; }
 .filters button {
@@ -144,16 +145,16 @@ img { display: block; max-width: 100%; }
 .news-card__placeholder::before, .news-card__placeholder::after { content: ""; position: absolute; width: 150px; height: 150px; border: 28px solid rgba(90,36,79,.16); border-radius: 50%; }
 .news-card__placeholder::before { left: -70px; top: -70px; }
 .news-card__placeholder::after { right: -80px; bottom: -80px; }
-.news-card__placeholder span { color: var(--blue); font-family: Impact, "Arial Black", sans-serif; font-size: 74px; line-height: 1; }
+.news-card__placeholder span { color: var(--blue); font-family: var(--font-ui); font-weight: 800; font-size: 68px; line-height: 1; }
 .news-card__placeholder b { margin-top: 8px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
 .news-card__tag { position: absolute; left: 14px; top: 14px; padding: 7px 10px; background: var(--yellow); color: var(--ink); font-size: 10px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--ink); }
 .news-card__body { display: flex; flex-direction: column; padding: 22px; }
 .news-card--featured .news-card__body { padding: 28px; justify-content: center; }
 .news-card__meta { display: flex; justify-content: space-between; gap: 10px; color: #7a828f; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-.news-card h3 { margin: 14px 0 12px; font-family: Impact, "Arial Black", sans-serif; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.015em; }
-.news-card--featured h3 { font-size: clamp(31px, 3.2vw, 46px); }
+.news-card h3 { margin: 14px 0 12px; font-family: var(--font-ui); font-size: 24px; font-weight: 750; line-height: 1.22; letter-spacing: -.01em; }
+.news-card--featured h3 { font-size: clamp(29px, 2.7vw, 40px); }
 .news-card h3 a:hover { color: var(--blue); }
-.news-card p { margin: 0; color: #5b6370; font-size: 14px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.news-card p { margin: 0; color: #5b6370; font-size: 15px; line-height: 1.65; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .news-card__link { align-self: flex-start; margin-top: 20px; padding-bottom: 3px; border-bottom: 2px solid var(--yellow); font-size: 12px; font-weight: 900; text-transform: uppercase; }
 .news-card__link span { color: var(--coral); }
 .empty-state { padding: 46px; text-align: center; border: 1px dashed var(--line); color: #66707d; }
@@ -161,12 +162,12 @@ img { display: block; max-width: 100%; }
 
 .agenda { display: grid; grid-template-columns: .78fr 1.22fr; background: var(--blue-dark); color: white; border: 3px solid var(--ink); }
 .agenda__intro { padding: 58px 52px; background: var(--blue); }
-.agenda__intro h2 { font-size: clamp(45px, 5.2vw, 68px); }
+.agenda__intro h2 { font-size: clamp(40px, 4.4vw, 60px); }
 .agenda__intro p { max-width: 400px; color: #f3d9cf; font-size: 15px; }
 .agenda__list { margin: 0; padding: 20px 46px; list-style: none; }
 .agenda__list li { min-height: 150px; display: grid; grid-template-columns: 52px 1fr 36px; align-items: center; gap: 20px; border-bottom: 1px solid rgba(255,255,255,.16); }
 .agenda__list li:last-child { border-bottom: 0; }
-.agenda__number { color: var(--yellow); font-family: Impact, "Arial Black", sans-serif; font-size: 27px; }
+.agenda__number { color: var(--yellow); font-family: var(--font-ui); font-weight: 800; font-size: 25px; }
 .agenda__category { color: #b9cbb7; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
 .agenda__list h3 { margin: 7px 0 0; font-size: 19px; line-height: 1.25; }
 .agenda__list li > a { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.3); border-radius: 50%; }
@@ -176,7 +177,7 @@ img { display: block; max-width: 100%; }
 .about__quote { min-height: 485px; position: relative; display: grid; place-items: center; padding: 50px; background: var(--yellow); border: 3px solid var(--ink); box-shadow: -12px 12px 0 var(--blue); transform: rotate(-1deg); }
 .about__quote::after { content: ""; position: absolute; right: -22px; bottom: -22px; width: 78px; height: 78px; border-radius: 50%; background: var(--coral); border: 3px solid var(--ink); }
 .quote-mark { position: absolute; left: 27px; top: 12px; color: var(--blue); font-family: Georgia, serif; font-size: 110px; line-height: 1; }
-.about blockquote { margin: 0; font-family: Impact, "Arial Black", sans-serif; font-size: clamp(31px, 3.2vw, 46px); line-height: 1.08; letter-spacing: -.02em; text-transform: uppercase; }
+.about blockquote { margin: 0; font-family: var(--font-ui); font-weight: 750; font-size: clamp(29px, 2.8vw, 40px); line-height: 1.2; letter-spacing: -.01em; }
 .about h2 { font-size: clamp(48px, 5vw, 68px); }
 .about__copy > p { max-width: 540px; color: #525b67; font-size: 17px; line-height: 1.65; }
 .subscribe-card { margin-top: 30px; padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; background: var(--ink); color: white; }
@@ -209,11 +210,11 @@ footer { background: var(--ink); color: white; border-top: 8px solid var(--yello
   .topline__date, .nav { display: none; }
   .site-header { min-height: 76px; gap: 10px; }
   .brand__mark { width: 40px; height: 40px; }
-  .brand__name { font-size: 17px; }
+  .brand__name { font-size: 16px; }
   .header-cta { min-height: 42px; padding-inline: 14px; font-size: 12px; }
   .header-cta .button__dot { display: none; }
   .hero { padding-top: 42px; padding-bottom: 48px; gap: 40px; }
-  .hero h1 { font-size: clamp(62px, 20vw, 91px); }
+  .hero h1 { font-size: clamp(52px, 15vw, 76px); }
   .hero__lead { font-size: 17px; }
   .hero__actions { align-items: flex-start; flex-direction: column; gap: 12px; }
   .hero__visual { box-shadow: 7px 7px 0 var(--ink); }
@@ -228,7 +229,7 @@ footer { background: var(--ink); color: white; border-top: 8px solid var(--yello
   .news-card--featured { grid-column: auto; display: block; }
   .news-card--featured .news-card__media { min-height: 270px; }
   .news-card--featured .news-card__body { padding: 22px; }
-  .news-card--featured h3 { font-size: 31px; }
+  .news-card--featured h3 { font-size: 29px; }
   .agenda__intro { padding: 42px 26px; }
   .agenda__list { padding: 12px 22px; }
   .agenda__list li { min-height: 150px; grid-template-columns: 38px 1fr 34px; gap: 12px; }
