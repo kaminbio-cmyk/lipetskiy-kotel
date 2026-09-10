@@ -16,13 +16,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: "Новости без лишнего шума",
       type: "website",
       locale: "ru_RU",
-      images: [{ url: `${origin}/og.png`, width: 1734, height: 908, alt: "Липецкий котёл — новости без лишнего шума" }],
+      images: [{ url: `${origin}/og-v2.png`, width: 1734, height: 908, alt: "Липецкий котёл — новости без лишнего шума" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "Липецкий котёл",
       description: "Новости без лишнего шума",
-      images: [`${origin}/og.png`],
+      images: [`${origin}/og-v2.png`],
     },
   };
 }

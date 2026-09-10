@@ -236,7 +236,7 @@ export default async function Home() {
           </div>
         </div>
         <div className="hero__visual">
-          <img src="/og.png" alt="Иллюстрация: новости Липецка кипят в синем котле" />
+          <img src="/og-v2.png" alt="Иллюстрация: новости Липецка кипят в сливовом котле" />
           <div className="hero__stamp" aria-label="Новости каждый день">
             <strong>24/7</strong><span>в повестке</span>
           </div>
