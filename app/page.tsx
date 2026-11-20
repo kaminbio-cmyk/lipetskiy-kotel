@@ -202,121 +202,103 @@ export default async function Home() {
   const now = new Intl.DateTimeFormat("ru-RU", {
     weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Moscow",
   }).format(new Date());
+  const lead = posts[0];
+  const secondary = posts.slice(1, 3);
+  const recommended = posts.slice(3, 7);
+  const categories = ["Все новости", "Россия и мир", "Липецк", "Регион", "Суд и право", "Власть", "Политика", "Экономика", "Общество", "Аналитика", "ЖКХ", "Происшествия", "Спорт", "Здоровье"];
 
   return (
-    <main>
-      <div className="topline">
-        <div className="shell topline__inner">
-          <span>Липецк и область</span>
-          <span className="topline__date">{now}</span>
-          <a href="#news">Свежий выпуск ↓</a>
+    <div className="site" id="top">
+      <header className="site-header">
+        <div className="shell site-header__main">
+          <a className="brand" href="#top" aria-label="Липецкий котёл — на главную">
+            <span className="brand__mark" aria-hidden="true"><i /><b /></span>
+            <span><strong>ЛИПЕЦКИЙ КОТЁЛ</strong><small>Информационно-аналитический канал</small></span>
+          </a>
+          <div className="header-tools" aria-label="Ссылки редакции">
+            <a href="#news" aria-label="Перейти к поиску по новостям">⌕</a>
+            <a href="https://max.ru/lippot" target="_blank" rel="noreferrer" aria-label="Канал в MAX">M</a>
+            <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer" aria-label="Канал в Telegram">↗</a>
+          </div>
         </div>
-      </div>
-
-      <header className="site-header shell">
-        <a className="brand" href="#top" aria-label="Липецкий котёл — на главную">
-          <span className="brand__mark" aria-hidden="true">ЛК</span>
-          <span className="brand__name">Липецкий<br />котёл</span>
-        </a>
-        <nav className="nav" aria-label="Основная навигация">
-          <a href="#news">Новости</a>
-          <a href="#agenda">Повестка</a>
-          <a href="#about">О канале</a>
+        <nav className="category-nav shell" aria-label="Рубрики">
+          {categories.map((category, index) => <a className={index === 0 ? "is-active" : ""} href="#news" key={category}>{category}</a>)}
         </nav>
-        <a className="button button--telegram header-cta" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">
-          <span className="button__dot" aria-hidden="true">↗</span>Подписаться
-        </a>
       </header>
 
-      <section className="hero shell" id="top">
-        <div className="hero__copy">
-          <div className="eyebrow"><span /> Независимая повестка региона</div>
-          <h1>Что кипит<br />в Липецке?</h1>
-          <p className="hero__lead">Факты, аналитика и события, которые меняют город. Читаем между строк — объясняем по существу.</p>
-          <div className="hero__actions">
-            <a className="button button--dark" href="#news">Читать новости <span>↓</span></a>
-            <a className="text-link" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Открыть @lippot ↗</a>
-          </div>
-          <div className="sync-note">
-            <span className={`sync-note__pulse ${live ? "is-live" : ""}`} />
-            {live
-              ? `${posts.length} публикаций ${completeMonth ? "за последние 30 дней" : "загружено из Telegram"}`
-              : "Telegram временно недоступен — откройте канал"}
-          </div>
-        </div>
-        <div className="hero__visual">
-          <img src="/og-v2.png" alt="Иллюстрация: новости Липецка кипят в сливовом котле" />
-          <div className="hero__stamp" aria-label="Новости каждый день"><strong>24/7</strong><span>в повестке</span></div>
-        </div>
-      </section>
+      <main>
+        <section className="front shell" aria-label="Главные новости">
+          <aside className="brief-column">
+            <div className="brief-tabs"><span>ГЛАВНОЕ В СТРАНЕ</span><span>В МИРЕ</span></div>
+            <div className="brief-list">
+              {posts.slice(1, 7).map((post) => (
+                <a href={`#post-${post.id}`} key={post.id}><strong>{post.title}</strong><small>{post.category}</small></a>
+              ))}
+            </div>
+            <a className="brief-more" href="#news">Читать все</a>
+            <a className="social-row social-row--telegram" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer"><span>↗</span>Мы в Telegram</a>
+            <a className="social-row social-row--max" href="https://max.ru/lippot" target="_blank" rel="noreferrer"><span>M</span>Мы в MAX</a>
+          </aside>
 
-      <section className="ticker" aria-label="Последние заголовки">
-        <div className="ticker__label">Сейчас</div>
-        <div className="ticker__track">
-          {posts.slice(0, 3).map((post) => (
-            <a key={post.id} href={`#post-${post.id}`}><span>●</span> {post.title}</a>
-          ))}
-        </div>
-      </section>
-
-      <section className="news-section shell" id="news">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow"><span /> Архив @lippot за 30 дней</div>
-            <h2>Новости за месяц</h2>
-          </div>
-          <p>{posts.length} публикаций<br />полный текст раскрывается по нажатию</p>
-        </div>
-        <NewsGrid posts={posts} />
-      </section>
-
-      <section className="agenda shell" id="agenda">
-        <div className="agenda__intro">
-          <div className="eyebrow eyebrow--light"><span /> Главное за минуту</div>
-          <h2>Повестка,<br />которая касается вас</h2>
-          <p>Три темы, с которых удобно начать знакомство с сегодняшней картиной дня.</p>
-        </div>
-        <ol className="agenda__list">
-          {posts.slice(0, 3).map((post, index) => (
-            <li key={post.id}>
-              <span className="agenda__number">0{index + 1}</span>
-              <div><span className="agenda__category">{post.category}</span><h3>{post.title}</h3></div>
-              <a href={`#post-${post.id}`} aria-label={`Читать: ${post.title}`}>↓</a>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="about shell" id="about">
-        <div className="about__quote">
-          <span className="quote-mark">“</span>
-          <blockquote>Информация — это не шум.<br />Это возможность понимать,<br />что происходит на самом деле.</blockquote>
-        </div>
-        <div className="about__copy">
-          <div className="eyebrow"><span /> О «Липецком котле»</div>
-          <h2>Для тех, кто привык думать</h2>
-          <p>Интеллектуальный деловой канал о социально-экономической ситуации в регионе и стране. Аналитика, события и контекст, который часто остаётся за официальной статистикой.</p>
-          <div className="subscribe-card">
-            <div><strong>Будьте в курсе</strong><span>Выберите удобный канал</span></div>
-            <div className="subscribe-card__actions">
-              <a className="button button--telegram" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram ↗</a>
-              <a className="button button--max" href="https://max.ru/lippot" target="_blank" rel="noreferrer">MAX ↗</a>
+          <div className="front__content">
+            {lead && (
+              <a className="lead-story" href={`#post-${lead.id}`}>
+                {lead.image ? <img src={lead.image} alt={`Иллюстрация к новости «${lead.title}»`} /> : <span className="lead-story__placeholder">ЛК</span>}
+                <span className="lead-story__shade" />
+                <span className="lead-story__content"><small>{lead.category}&nbsp;&nbsp;·&nbsp;&nbsp;{lead.date}</small><strong>{lead.title}</strong></span>
+              </a>
+            )}
+            <div className="front__grid">
+              {secondary.map((post) => (
+                <a className="front-card" href={`#post-${post.id}`} key={post.id}>
+                  <span className="front-card__media">
+                    {post.image ? <img src={post.image} alt="" /> : <span className="front-card__placeholder">ЛК</span>}
+                    <span><b>{post.category}</b><time>{post.date}</time></span>
+                  </span>
+                  <strong>{post.title}</strong>
+                  <small>{post.excerpt}</small>
+                </a>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer>
-        <div className="shell footer__inner">
-          <div className="brand brand--footer"><span className="brand__mark" aria-hidden="true">ЛК</span><span className="brand__name">Липецкий<br />котёл</span></div>
-          <p>© {new Date().getFullYear()} «Липецкий котёл»<br />Новости Липецка и Липецкой области</p>
-          <div className="footer__links">
-            <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram</a>
-            <a href="https://max.ru/lippot" target="_blank" rel="noreferrer">MAX</a>
-            <a href="mailto:lipport@protonmail.com">Редакция</a>
+        <section className="recommend shell" aria-labelledby="recommend-title">
+          <div className="recommend__heading"><h2 id="recommend-title">Рекомендуем</h2><span>{now}</span></div>
+          <div className="recommend__grid">
+            {recommended.map((post) => (
+              <a href={`#post-${post.id}`} key={post.id}>
+                <span className="recommend__media">{post.image ? <img src={post.image} alt="" /> : <span>ЛК</span>}<b>{post.category}</b></span>
+                <strong>{post.title}</strong>
+              </a>
+            ))}
           </div>
+        </section>
+
+        <section className="news-section shell" id="news">
+          <div className="section-heading">
+            <div><span className="section-kicker">Лента @lippot</span><h2>Все новости</h2></div>
+            <p><span className={`status-dot ${live ? "is-live" : ""}`} />{posts.length} публикаций {completeMonth ? "за 30 дней" : "загружено"}</p>
+          </div>
+          <NewsGrid posts={posts} />
+        </section>
+
+        <section className="subscribe-strip" id="about">
+          <div className="shell subscribe-strip__inner">
+            <div><span>ЛИПЕЦКИЙ КОТЁЛ</span><h2>Новости без лишнего шума</h2><p>Факты, аналитика и события Липецка и области — в удобном для вас канале.</p></div>
+            <div><a className="button button--primary" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Подписаться в Telegram ↗</a><a className="button button--light" href="https://max.ru/lippot" target="_blank" rel="noreferrer">Открыть MAX ↗</a></div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <div className="shell site-footer__inner">
+          <div className="brand brand--footer"><span className="brand__mark" aria-hidden="true"><i /><b /></span><span><strong>ЛИПЕЦКИЙ КОТЁЛ</strong><small>Информационно-аналитический канал</small></span></div>
+          <div><strong>Рубрики</strong><a href="#news">Липецк</a><a href="#news">Регион</a><a href="#news">Экономика</a></div>
+          <div><strong>Контакты</strong><a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram</a><a href="https://max.ru/lippot" target="_blank" rel="noreferrer">MAX</a><a href="mailto:lipport@protonmail.com">Редакция</a></div>
+          <p>© {new Date().getFullYear()} «Липецкий котёл»<br />Липецк и Липецкая область</p>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
