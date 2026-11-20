@@ -212,8 +212,11 @@ export default async function Home() {
       <header className="site-header">
         <div className="shell site-header__main">
           <a className="brand" href="#top" aria-label="Липецкий котёл — на главную">
-            <span className="brand__mark" aria-hidden="true"><i /><b /></span>
-            <span><strong>ЛИПЕЦКИЙ КОТЁЛ</strong><small>Информационно-аналитический канал</small></span>
+            <span className="brand__mark" aria-hidden="true"><span>ЛК</span></span>
+            <span className="brand__copy">
+              <strong><span>ЛИПЕЦКИЙ</span><b>КОТЁЛ</b></strong>
+              <small>Новости и аналитика региона</small>
+            </span>
           </a>
           <div className="header-tools" aria-label="Ссылки редакции">
             <a href="#news" aria-label="Перейти к поиску по новостям">⌕</a>
@@ -293,7 +296,10 @@ export default async function Home() {
 
       <footer className="site-footer">
         <div className="shell site-footer__inner">
-          <div className="brand brand--footer"><span className="brand__mark" aria-hidden="true"><i /><b /></span><span><strong>ЛИПЕЦКИЙ КОТЁЛ</strong><small>Информационно-аналитический канал</small></span></div>
+          <div className="brand brand--footer">
+            <span className="brand__mark" aria-hidden="true"><span>ЛК</span></span>
+            <span className="brand__copy"><strong><span>ЛИПЕЦКИЙ</span><b>КОТЁЛ</b></strong><small>Новости и аналитика региона</small></span>
+          </div>
           <div><strong>Рубрики</strong><a href="#news">Липецк</a><a href="#news">Регион</a><a href="#news">Экономика</a></div>
           <div><strong>Контакты</strong><a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram</a><a href="https://max.ru/lippot" target="_blank" rel="noreferrer">MAX</a><a href="mailto:lipport@protonmail.com">Редакция</a></div>
           <p>© {new Date().getFullYear()} «Липецкий котёл»<br />Липецк и Липецкая область</p>

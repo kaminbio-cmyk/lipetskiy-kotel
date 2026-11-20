@@ -27,13 +27,14 @@ img { display: block; max-width: 100%; }
 .site-header { position: relative; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
 .site-header__main { min-height: 92px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand { display: inline-flex; align-items: center; gap: 13px; min-width: 0; }
-.brand > span:last-child { display: flex; flex-direction: column; }
-.brand strong { font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: -.025em; }
-.brand small { margin-top: 5px; color: #8a909b; font-size: 10px; line-height: 1.1; }
-.brand__mark { width: 46px; height: 40px; position: relative; display: block; flex: none; }
-.brand__mark::before { content: ""; position: absolute; left: 0; bottom: 0; width: 33px; height: 33px; border: 8px solid var(--violet); border-top-color: transparent; border-radius: 50%; transform: rotate(-18deg); }
-.brand__mark i { position: absolute; left: 21px; top: 0; width: 23px; height: 8px; background: var(--coral); border-radius: 1px; }
-.brand__mark b { position: absolute; left: 29px; top: 8px; width: 7px; height: 12px; background: var(--coral); }
+.brand__copy { min-width: 0; display: flex; flex-direction: column; }
+.brand strong { display: flex; align-items: baseline; gap: 7px; color: #192235; font-size: 22px; font-weight: 900; line-height: 1; letter-spacing: .015em; white-space: nowrap; }
+.brand strong b { color: #d92a5b; font: inherit; }
+.brand small { margin-top: 7px; color: #7f8794; font-size: 9px; font-weight: 700; line-height: 1; letter-spacing: .12em; text-transform: uppercase; }
+.brand__mark { width: 54px; height: 54px; position: relative; display: grid; place-items: center; flex: none; overflow: hidden; border-radius: 11px 11px 11px 3px; background: linear-gradient(145deg, #711647, #d92459); box-shadow: 0 6px 16px rgba(113, 22, 71, .2); }
+.brand__mark::before { content: ""; position: absolute; width: 42px; height: 42px; top: -19px; right: -17px; border: 7px solid rgba(255, 209, 47, .35); border-radius: 50%; }
+.brand__mark::after { content: ""; position: absolute; left: 0; bottom: 0; width: 15px; height: 5px; background: #ffd12f; }
+.brand__mark > span { position: relative; z-index: 1; color: #ffd12f; font-size: 21px; font-weight: 950; line-height: 1; letter-spacing: -.1em; transform: translateX(-1px) skew(-5deg); text-shadow: 0 1px 0 rgba(35, 8, 24, .22); }
 .header-tools { display: flex; align-items: center; gap: 8px; }
 .header-tools a { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #11151d; color: white; font-size: 13px; font-weight: 900; }
 .header-tools a:hover { background: var(--primary); }
@@ -168,6 +169,7 @@ img { display: block; max-width: 100%; }
 .site-footer { background: var(--footer); color: white; }
 .site-footer__inner { min-height: 250px; display: grid; grid-template-columns: 1.8fr .7fr .7fr 1fr; align-items: start; gap: 50px; padding-block: 58px; }
 .brand--footer strong { color: white; }
+.brand--footer strong b { color: #ffd12f; }
 .brand--footer small { color: #909aab; }
 .site-footer__inner > div:not(.brand) { display: flex; flex-direction: column; gap: 9px; font-size: 12px; }
 .site-footer__inner > div:not(.brand) strong { margin-bottom: 5px; color: #aeb7c6; font-size: 11px; text-transform: uppercase; }
@@ -190,9 +192,10 @@ img { display: block; max-width: 100%; }
 @media (max-width: 760px) {
   .shell { width: min(100% - 26px, 1180px); }
   .site-header__main { min-height: 76px; }
-  .brand strong { font-size: 18px; }
-  .brand small { font-size: 8px; }
-  .brand__mark { transform: scale(.86); transform-origin: left center; margin-right: -5px; }
+  .brand strong { gap: 5px; font-size: 18px; }
+  .brand small { margin-top: 5px; font-size: 7px; }
+  .brand__mark { width: 46px; height: 46px; border-radius: 9px 9px 9px 3px; }
+  .brand__mark > span { font-size: 18px; }
   .header-tools a { width: 31px; height: 31px; }
   .category-nav { width: 100%; padding-inline: 13px; }
   .front { grid-template-columns: 1fr; padding-top: 18px; }
@@ -220,7 +223,9 @@ img { display: block; max-width: 100%; }
 
 @media (max-width: 520px) {
   .brand small { display: none; }
-  .brand strong { font-size: 15px; }
+  .brand strong { gap: 4px; font-size: 14px; }
+  .brand__mark { width: 42px; height: 42px; }
+  .brand__mark > span { font-size: 16px; }
   .header-tools { gap: 5px; }
   .header-tools a:first-child { display: none; }
   .lead-story, .lead-story img, .lead-story__placeholder { min-height: 285px; height: 285px; }
