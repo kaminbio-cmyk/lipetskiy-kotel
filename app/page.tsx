@@ -1,4 +1,5 @@
 import { NewsGrid, type NewsPost } from "./NewsGrid";
+import { CategoryNav } from "./CategoryNav";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 300;
@@ -224,9 +225,7 @@ export default async function Home() {
             <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer" aria-label="Канал в Telegram">↗</a>
           </div>
         </div>
-        <nav className="category-nav shell" aria-label="Рубрики">
-          {categories.map((category, index) => <a className={index === 0 ? "is-active" : ""} href="#news" key={category}>{category}</a>)}
-        </nav>
+        <CategoryNav categories={categories} />
       </header>
 
       <main>
