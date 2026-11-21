@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export type NewsPost = {
   id: string;
@@ -30,6 +30,7 @@ export function NewsGrid({ posts }: { posts: NewsPost[] }) {
   const [active, setActive] = useState("Все");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const filters = useMemo(() => {
     const counts = new Map<string, number>();
@@ -46,6 +47,23 @@ export function NewsGrid({ posts }: { posts: NewsPost[] }) {
     [active, posts]
   );
   const visiblePosts = filteredPosts.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredPosts.length;
+
+  useEffect(() => {
+    const loader = loaderRef.current;
+    if (!loader || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setVisibleCount((count) => Math.min(count + PAGE_SIZE, filteredPosts.length));
+      },
+      { rootMargin: "700px 0px", threshold: 0.01 }
+    );
+
+    observer.observe(loader);
+    return () => observer.disconnect();
+  }, [active, filteredPosts.length, hasMore]);
 
   function chooseFilter(filter: string) {
     setActive(filter);
@@ -158,15 +176,17 @@ export function NewsGrid({ posts }: { posts: NewsPost[] }) {
 
       {visiblePosts.length === 0 && <div className="empty-state">За последние 30 дней новостей с таким тегом нет.</div>}
 
-      <div className="more-news">
-        {visibleCount < filteredPosts.length ? (
-          <button className="button button--light" type="button" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
-            Показать ещё {Math.min(PAGE_SIZE, filteredPosts.length - visibleCount)}
-          </button>
-        ) : (
-          <a className="button button--light" href="https://t.me/lippot" target="_blank" rel="noreferrer">Все публикации в Telegram ↗</a>
-        )}
-      </div>
+      {hasMore ? (
+        <div className="more-news" ref={loaderRef} role="status" aria-live="polite">
+          <span className="more-news__spinner" aria-hidden="true" />
+          <span>Загружаем следующие новости…</span>
+        </div>
+      ) : filteredPosts.length > 0 ? (
+        <div className="feed-complete">
+          <span>Все новости за выбранный период загружены</span>
+          <a href="https://t.me/lippot" target="_blank" rel="noreferrer">Перейти в Telegram ↗</a>
+        </div>
+      ) : null}
     </>
   );
 }
