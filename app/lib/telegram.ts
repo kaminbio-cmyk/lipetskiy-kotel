@@ -10,7 +10,7 @@ const PAGE_STEP = 16; // на странице t.me/s не меньше 16 со�
 const PARALLEL = 4;
 const MAX_REQUESTS = 40;
 const CACHE_TTL_MS = 4 * 60 * 1000;
-const CACHE_KEY = "https://feed-cache.lipetskiy-kotel.local/lippot-v3";
+const CACHE_KEY = "https://feed-cache.lipetskiy-kotel.local/lippot-v4";
 
 export type Reaction = { emoji: string; count: string };
 export type Media = { src: string; ratio: number | null };
@@ -55,6 +55,22 @@ export type Feed = {
   completeMonth: boolean;
   fetchedAt: number;
 };
+
+/* ---------- медиа через сам сайт ---------- */
+
+// Серверы картинок Telegram в России часто отвечают с большой задержкой.
+// Поэтому фото и видео отдаются с адреса сайта: /api/img скачивает их сам и кеширует.
+export const MEDIA_HOSTS = /^cdn\d*\.(?:telesco\.pe|telegram-cdn\.org)$/i;
+
+function viaSite(url: string) {
+  try {
+    const parsed = new URL(url, "https://t.me");
+    if (parsed.protocol !== "https:" || !MEDIA_HOSTS.test(parsed.hostname)) return url;
+    return `/api/img?u=${encodeURIComponent(parsed.toString())}`;
+  } catch {
+    return url;
+  }
+}
 
 /* ---------- текст ---------- */
 
@@ -347,7 +363,7 @@ function parsePage(html: string): RawPost[] {
         const src = photo[2].match(/background-image:url\('([^']+)'\)/)?.[1];
         if (!src) continue;
         const padding = photo[3].match(/padding-top:([\d.]+)%/)?.[1];
-        images.push({ src: decodeHtml(src), ratio: padding ? Number.parseFloat(padding) / 100 : null });
+        images.push({ src: viaSite(decodeHtml(src)), ratio: padding ? Number.parseFloat(padding) / 100 : null });
       }
 
       const thumb = block.match(/tgme_widget_message_video_thumb"[^>]*background-image:url\('([^']+)'\)/)?.[1];
@@ -356,9 +372,9 @@ function parsePage(html: string): RawPost[] {
       const videoRatio = block.match(/tgme_widget_message_video_wrap"[^>]*padding-top:([\d.]+)%/)?.[1];
       const video: Video | null = thumb
         ? {
-            thumb: decodeHtml(thumb),
+            thumb: viaSite(decodeHtml(thumb)),
             duration,
-            src: videoSrc ? decodeHtml(videoSrc) : null,
+            src: videoSrc ? viaSite(decodeHtml(videoSrc)) : null,
             ratio: videoRatio ? Number.parseFloat(videoRatio) / 100 : null,
           }
         : null;
@@ -535,7 +551,7 @@ let memory: Feed | null = null;
 let inflight: Promise<Feed> | null = null;
 
 type EdgeCache = { match(request: Request): Promise<Response | undefined>; put(request: Request, response: Response): Promise<void> };
-function edgeCache(): EdgeCache | null {
+export function edgeCache(): EdgeCache | null {
   const store = (globalThis as unknown as { caches?: { default?: EdgeCache } }).caches;
   return store?.default ?? null;
 }

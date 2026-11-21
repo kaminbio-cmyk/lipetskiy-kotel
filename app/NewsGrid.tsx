@@ -13,6 +13,17 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]+>/g, " ").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 }
 
+/** Слишком длинная первая строка поста: в заголовок — до последней запятой или скобки, целиком — подводкой. */
+function splitHeading(full: string): { title: string; lead: string | null } {
+  if (full.length <= 160) return { title: full, lead: null };
+  const head = full.slice(0, 150);
+  const cut = Math.max(head.lastIndexOf(", "), head.lastIndexOf(" ("), head.lastIndexOf(". "), head.lastIndexOf(": "));
+  const title = cut >= 50 ? head.slice(0, cut).trim() : head.replace(/\s+\S*$/, "");
+  // Подводка продолжает заголовок, без повтора уже показанного.
+  const rest = full.slice(title.length).replace(/^[\s,.:]+/, "");
+  return { title: rest ? `${title}…` : title, lead: rest ? `…${rest}` : null };
+}
+
 function MediaBox({ post, eager = false }: { post: NewsPost; eager?: boolean }) {
   const src = post.images[0]?.src ?? post.video?.thumb ?? post.cover;
   if (!src) return null;
@@ -162,6 +173,7 @@ function Reader({
     sheetRef.current?.scrollTo({ top: 0 });
   }, [post.id]);
 
+  const heading = splitHeading(post.fullTitle || post.title);
   const pageUrl = typeof window === "undefined" ? post.url : `${window.location.origin}${window.location.pathname}#post-${post.id}`;
 
   async function share() {
@@ -208,7 +220,8 @@ function Reader({
         </div>
 
         <article className="reader__article" data-post-id={post.id}>
-          <h1 id="reader-title">{post.fullTitle || post.title}</h1>
+          <h1 id="reader-title">{heading.title}</h1>
+          {heading.lead && <p className="reader__lead">{heading.lead}</p>}
           <div className="reader__meta">
             {post.views && <span>{formatCount(post.views)} просмотров</span>}
             <span>{post.readMinutes} мин чтения</span>
