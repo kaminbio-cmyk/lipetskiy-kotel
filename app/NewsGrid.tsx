@@ -131,7 +131,7 @@ export function NewsGrid({ posts }: { posts: NewsPost[] }) {
           return (
             <article className="news-card" key={post.id} id={`post-${post.id}`}>
               <button
-                className="news-card__media"
+                className={`news-card__media${post.image ? "" : " is-empty"}`}
                 type="button"
                 onClick={() => openPost(post.id)}
                 aria-label={`Открыть новость: ${post.title}`}
