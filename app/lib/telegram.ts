@@ -2,7 +2,7 @@
 
 export const TELEGRAM_CHANNEL = "https://t.me/lippot";
 export const TELEGRAM_FEED = "https://t.me/s/lippot";
-export const MAX_CHANNEL = "https://max.ru/lippot";
+export const VK_CHANNEL = "https://vk.ru/lipboiler2";
 export const EDITOR_EMAIL = "lipport@protonmail.com";
 
 const ARCHIVE_DAYS = 30;

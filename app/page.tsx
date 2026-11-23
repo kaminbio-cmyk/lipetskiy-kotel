@@ -4,7 +4,7 @@ import { NewsGrid } from "./NewsGrid";
 import { FilterLink, TopicChips } from "./TopicChips";
 import { SiteSearch, type SearchItem } from "./SiteSearch";
 import { EyeIcon, TelegramIcon } from "./icons";
-import { EDITOR_EMAIL, MAX_CHANNEL, TELEGRAM_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
+import { EDITOR_EMAIL, TELEGRAM_CHANNEL, VK_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
 import { NAV_CATEGORIES, formatCount, plural } from "./lib/format";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +90,7 @@ export default async function Home() {
               <span>Подписаться</span>
               {channel.subscribers && <b>{formatCount(channel.subscribers)}</b>}
             </a>
-            <a className="max-pill" href={MAX_CHANNEL} target="_blank" rel="noreferrer" aria-label="Канал в мессенджере MAX">MAX</a>
+            <a className="vk-pill" href={VK_CHANNEL} target="_blank" rel="noreferrer" aria-label="Сообщество во ВКонтакте">VK</a>
           </div>
         </div>
         <CategoryNav categories={NAV_CATEGORIES} counts={tagCounts} />
@@ -128,9 +128,9 @@ export default async function Home() {
               <em>Мы в Telegram</em>
               {channel.subscribers && <b>{formatCount(channel.subscribers)}</b>}
             </a>
-            <a className="social-row social-row--max" href={MAX_CHANNEL} target="_blank" rel="noreferrer">
-              <span>M</span>
-              <em>Мы в MAX</em>
+            <a className="social-row social-row--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">
+              <span>VK</span>
+              <em>Мы во ВКонтакте</em>
             </a>
           </aside>
 
@@ -242,7 +242,7 @@ export default async function Home() {
               <p>{channel.description || "Аналитика, события и то, что скрывается за статистикой: социально-экономическая ситуация в Липецке, области и стране."}</p>
               <div className="about-band__buttons">
                 <a className="button button--primary" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer"><TelegramIcon /> Подписаться в Telegram</a>
-                <a className="button button--glass" href={MAX_CHANNEL} target="_blank" rel="noreferrer">Читать в MAX</a>
+                <a className="button button--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">Мы во ВКонтакте</a>
                 <a className="button button--glass" href={`mailto:${EDITOR_EMAIL}`}>Написать в редакцию</a>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default async function Home() {
           <div>
             <strong>Мы в сетях</strong>
             <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram</a>
-            <a href={MAX_CHANNEL} target="_blank" rel="noreferrer">MAX</a>
+            <a href={VK_CHANNEL} target="_blank" rel="noreferrer">ВКонтакте</a>
             <a href={`mailto:${EDITOR_EMAIL}`}>Редакция</a>
           </div>
           <p>© {new Date().getFullYear()} «Липецкий котёл»<br />Липецк и Липецкая область<br /><a href="#top">Наверх ↑</a></p>
