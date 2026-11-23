@@ -27,7 +27,8 @@ export async function GET(request: Request) {
   if (!range && cache) {
     try {
       const hit = await cache.match(key);
-      if (hit) return hit;
+      // Ответ из кеша неизменяемый — копируем, иначе сервер не может дописать свои заголовки (ошибка 500).
+      if (hit) return new Response(hit.body, { status: hit.status, headers: new Headers(hit.headers) });
     } catch {
       /* без кеша идём к Telegram */
     }

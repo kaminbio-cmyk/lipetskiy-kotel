@@ -1,7 +1,8 @@
 import { BriefTabs, type BriefItem } from "./BriefTabs";
 import { CategoryNav } from "./CategoryNav";
 import { NewsGrid } from "./NewsGrid";
-import { FilterLink, SearchButton, TopicChips } from "./TopicChips";
+import { FilterLink, TopicChips } from "./TopicChips";
+import { SiteSearch, type SearchItem } from "./SiteSearch";
 import { BrandMark, EyeIcon, TelegramIcon } from "./icons";
 import { EDITOR_EMAIL, MAX_CHANNEL, TELEGRAM_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
 import { NAV_CATEGORIES, formatCount, plural } from "./lib/format";
@@ -63,6 +64,13 @@ export default async function Home() {
     .map(([tag, count]) => ({ tag, count }));
   const ticker = posts.slice(0, 12);
   const totalViews = posts.reduce((sum, post) => sum + post.viewsCount, 0);
+  const searchItems: SearchItem[] = posts.map((post) => ({
+    id: post.id,
+    title: post.title,
+    category: post.category,
+    date: post.dateShort,
+    text: `${post.title} ${post.excerpt} ${post.tags.join(" ")} ${post.category}`.toLowerCase(),
+  }));
 
   return (
     <div className="site" id="top">
@@ -75,9 +83,9 @@ export default async function Home() {
               <small>Новости и аналитика Липецкого края</small>
             </span>
           </a>
+          <SiteSearch items={searchItems} />
           <div className="header-tools">
             <span className="header-date">{today}</span>
-            <SearchButton />
             <a className="subscribe-pill" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">
               <TelegramIcon />
               <span>Подписаться</span>

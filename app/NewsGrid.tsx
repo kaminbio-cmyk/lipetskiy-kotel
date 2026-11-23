@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NewsPost } from "./lib/telegram";
 import { formatCount, plural } from "./lib/format";
 import { EyeIcon, TelegramIcon } from "./icons";
+import { Highlight } from "./SiteSearch";
 
 const PAGE_SIZE = 12;
 const POLL_MS = 90_000;
@@ -141,6 +142,7 @@ function Reader({
   onOpen,
   onTag,
   canOpen,
+  highlight,
 }: {
   post: NewsPost;
   neighbours: { prev: NewsPost | null; next: NewsPost | null };
@@ -148,10 +150,47 @@ function Reader({
   onOpen: (id: string) => void;
   onTag: (tag: string) => void;
   canOpen: (id: string) => boolean;
+  highlight: string;
 }) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
+  const textRef = useRef<HTMLDivElement | null>(null);
   const [notice, setNotice] = useState("");
+  const [found, setFound] = useState(0);
+
+  // Подсветка искомых слов в тексте статьи и прокрутка к первому совпадению.
+  useEffect(() => {
+    const root = textRef.current;
+    setFound(0);
+    if (!root || !highlight) return;
+    const list = highlight.toLowerCase().split(/\s+/).filter((word) => word.length > 1).map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    if (!list.length) return;
+    const pattern = new RegExp(`(${list.join("|")})`, "gi");
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+    let count = 0;
+    for (const node of nodes) {
+      const value = node.nodeValue ?? "";
+      pattern.lastIndex = 0;
+      if (!pattern.test(value)) continue;
+      const fragment = document.createDocumentFragment();
+      value.split(pattern).forEach((part, index) => {
+        if (index % 2 === 1) {
+          const mark = document.createElement("mark");
+          mark.textContent = part;
+          fragment.appendChild(mark);
+          count += 1;
+        } else if (part) fragment.appendChild(document.createTextNode(part));
+      });
+      node.replaceWith(fragment);
+    }
+    setFound(count);
+    const first = root.querySelector("mark");
+    if (first && sheetRef.current) {
+      window.setTimeout(() => first.scrollIntoView({ behavior: "smooth", block: "center" }), 350);
+    }
+  }, [highlight, post.id]);
 
   useEffect(() => {
     const previous = document.body.style.overflow;
@@ -231,7 +270,12 @@ function Reader({
 
           <Gallery key={post.id} post={post} />
 
-          <div className="reader__text" onClick={onTextClick} dangerouslySetInnerHTML={{ __html: post.html }} />
+          {found > 0 && (
+            <div className="reader__found">
+              <mark>{highlight}</mark> — найдено в тексте: {found}
+            </div>
+          )}
+          <div key={`${post.id}|${highlight}`} ref={textRef} className="reader__text" onClick={onTextClick} dangerouslySetInnerHTML={{ __html: post.html }} />
 
           {post.reactions.length > 0 && (
             <div className="reader__reactions">
@@ -278,6 +322,42 @@ function Reader({
   );
 }
 
+function NewsCard({ post, query, onOpen }: { post: NewsPost; query: string; onOpen: (id: string) => void }) {
+  return (
+    <article className="news-card" data-post-id={post.id}>
+      <a
+        className="news-card__link"
+        href={`#post-${post.id}`}
+        onClick={(event) => {
+          event.preventDefault();
+          onOpen(post.id);
+        }}
+      >
+        <MediaBox post={post} />
+        <span className="news-card__body">
+          <span className="news-card__meta">
+            <b className="chip">{post.category}</b>
+            <time dateTime={post.dateIso}>{post.dateShort}</time>
+          </span>
+          <strong className="news-card__title"><Highlight text={post.title} query={query} /></strong>
+          {post.excerpt && <span className="news-card__excerpt"><Highlight text={post.excerpt} query={query} /></span>}
+          <span className="news-card__footer">
+            {post.views && (
+              <span className="stat">
+                <EyeIcon />
+                {formatCount(post.views)}
+              </span>
+            )}
+            <span className="stat">{post.readMinutes} мин</span>
+            <Reactions post={post} limit={3} />
+            <span className="news-card__more">Читать →</span>
+          </span>
+        </span>
+      </a>
+    </article>
+  );
+}
+
 export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
   const [posts, setPosts] = useState(initialPosts);
   const [pending, setPending] = useState<NewsPost[]>([]);
@@ -285,6 +365,10 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [extras, setExtras] = useState<NewsPost[]>([]);
+  const [highlight, setHighlight] = useState("");
+  const [archive, setArchive] = useState<NewsPost[]>([]);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const sectionRef = useRef<HTMLDivElement | null>(null);
@@ -333,33 +417,110 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
       chooseFilter((event as CustomEvent<string>).detail);
       setOpenId(null);
     };
-    const onSearch = () => searchRef.current?.focus();
+    // Строка поиска в шапке: «Показать все результаты» и открытие найденной статьи.
+    const onQuery = (event: Event) => {
+      setActive("Все");
+      setQuery((event as CustomEvent<string>).detail);
+      setVisibleCount(PAGE_SIZE);
+      setOpenId(null);
+    };
+    const onHighlight = (event: Event) => setHighlight((event as CustomEvent<string>).detail);
+    const onOpenPost = (event: Event) => {
+      const { post, highlight: words } = (event as CustomEvent<{ post: NewsPost; highlight: string }>).detail;
+      setExtras((current) => (current.some((item) => item.id === post.id) ? current : [...current, post]));
+      setHighlight(words);
+      window.setTimeout(() => {
+        window.location.hash = `post-${post.id}`;
+        setOpenId(post.id);
+      }, 0);
+    };
     window.addEventListener("lk:filter", onFilter);
-    window.addEventListener("lk:search", onSearch);
+    window.addEventListener("lk:query", onQuery);
+    window.addEventListener("lk:highlight", onHighlight);
+    window.addEventListener("lk:open-post", onOpenPost);
     return () => {
       window.removeEventListener("lk:filter", onFilter);
-      window.removeEventListener("lk:search", onSearch);
+      window.removeEventListener("lk:query", onQuery);
+      window.removeEventListener("lk:highlight", onHighlight);
+      window.removeEventListener("lk:open-post", onOpenPost);
     };
   }, [chooseFilter]);
+
+  // Ответ строке поиска в шапке: совпадения по полному тексту статей месяца.
+  useEffect(() => {
+    const onLocalSearch = (event: Event) => {
+      const { q, reply } = (event as CustomEvent<{ q: string; reply: (found: Array<{ id: string; title: string; category: string; date: string; text: string }>) => void }>).detail;
+      const list = q.toLowerCase().split(/\s+/).filter((word) => word.length > 1);
+      const found = posts
+        .filter((post) => list.every((word) => (searchIndex.get(post.id) ?? "").includes(word)))
+        .slice(0, 5)
+        .map((post) => ({ id: post.id, title: post.title, category: post.category, date: post.dateShort, text: "" }));
+      reply(found);
+    };
+    window.addEventListener("lk:local-search", onLocalSearch);
+    return () => window.removeEventListener("lk:local-search", onLocalSearch);
+  }, [posts, searchIndex]);
+
+  const findPost = useCallback(
+    (id: string) => posts.find((post) => post.id === id) ?? extras.find((post) => post.id === id) ?? archive.find((post) => post.id === id) ?? null,
+    [posts, extras, archive]
+  );
 
   // Открытие статьи по адресу #post-12345 (ссылки с главной, из подборок, присланные друзьям).
   useEffect(() => {
     const sync = () => {
       const id = window.location.hash.match(/^#post-(\d+)$/)?.[1] ?? null;
-      setOpenId(id && posts.some((post) => post.id === id) ? id : null);
+      setOpenId(id && findPost(id) ? id : null);
     };
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
-  }, [posts]);
+  }, [findPost]);
 
-  const openPost = useCallback((id: string) => {
-    if (window.location.hash !== `#post-${id}`) window.location.hash = `post-${id}`;
-    setOpenId(id);
-  }, []);
+  // Поиск по всему архиву канала — когда в ленте задан запрос.
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setArchive([]);
+      setArchiveLoading(false);
+      return;
+    }
+    setArchiveLoading(true);
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+        const data = (await response.json()) as { posts: NewsPost[] };
+        setArchive(data.posts ?? []);
+      } catch {
+        /* отменено или нет сети */
+      } finally {
+        if (!controller.signal.aborted) setArchiveLoading(false);
+      }
+    }, 500);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
+  const archiveOnly = useMemo(() => {
+    const known = new Set(posts.map((post) => post.id));
+    return archive.filter((post) => !known.has(post.id));
+  }, [archive, posts]);
+
+  const openPost = useCallback(
+    (id: string) => {
+      if (query.trim()) setHighlight(query.trim());
+      if (window.location.hash !== `#post-${id}`) window.location.hash = `post-${id}`;
+      setOpenId(id);
+    },
+    [query]
+  );
 
   const closePost = useCallback(() => {
     setOpenId(null);
+    setHighlight("");
     if (window.location.hash.startsWith("#post-")) {
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
     }
@@ -413,12 +574,15 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const openIndex = openId ? posts.findIndex((post) => post.id === openId) : -1;
-  const openPostData = openIndex >= 0 ? posts[openIndex] : null;
+  const openPostData = openId ? findPost(openId) : null;
+  // Соседние статьи — из того списка, где открыта статья: лента месяца или найденное в архиве.
+  const list = openId && posts.some((post) => post.id === openId) ? posts : archiveOnly;
+  const openIndex = openId ? list.findIndex((post) => post.id === openId) : -1;
   const neighbours = {
-    prev: openIndex > 0 ? posts[openIndex - 1] : null,
-    next: openIndex >= 0 && openIndex < posts.length - 1 ? posts[openIndex + 1] : null,
+    prev: openIndex > 0 ? list[openIndex - 1] : null,
+    next: openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1] : null,
   };
+  const searching = query.trim().length >= 2;
 
   return (
     <div ref={sectionRef} className="news-feed">
@@ -429,7 +593,7 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
             ref={searchRef}
             type="search"
             value={query}
-            placeholder="Поиск по новостям: тарифы, бюджет, Елец…"
+            placeholder="Поиск по новостям и архиву канала…"
             onChange={(event) => {
               setQuery(event.target.value);
               setVisibleCount(PAGE_SIZE);
@@ -458,46 +622,49 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
         </span>
       </div>
 
+      {searching && (
+        <div className="search-summary" role="status">
+          По запросу <mark>«{query.trim()}»</mark>: за месяц — {filteredPosts.length}
+          {archiveLoading ? ", ищем в архиве канала…" : `, в архиве канала — ещё ${archiveOnly.length}`}
+          <button type="button" onClick={() => setQuery("")}>Сбросить</button>
+        </div>
+      )}
+
       <div className="news-grid">
         {visiblePosts.map((post) => (
-          <article className="news-card" key={post.id} data-post-id={post.id}>
-            <a
-              className="news-card__link"
-              href={`#post-${post.id}`}
-              onClick={(event) => {
-                event.preventDefault();
-                openPost(post.id);
-              }}
-            >
-              <MediaBox post={post} />
-              <span className="news-card__body">
-                <span className="news-card__meta">
-                  <b className="chip">{post.category}</b>
-                  <time dateTime={post.dateIso}>{post.dateShort}</time>
-                </span>
-                <strong className="news-card__title">{post.title}</strong>
-                {post.excerpt && <span className="news-card__excerpt">{post.excerpt}</span>}
-                <span className="news-card__footer">
-                  {post.views && (
-                    <span className="stat">
-                      <EyeIcon />
-                      {formatCount(post.views)}
-                    </span>
-                  )}
-                  <span className="stat">{post.readMinutes} мин</span>
-                  <Reactions post={post} limit={3} />
-                  <span className="news-card__more">Читать →</span>
-                </span>
-              </span>
-            </a>
-          </article>
+          <NewsCard key={post.id} post={post} query={query} onOpen={openPost} />
         ))}
       </div>
 
       {visiblePosts.length === 0 && (
         <div className="empty-state">
-          Ничего не нашлось. Попробуйте другое слово или <button type="button" onClick={() => chooseFilter("Все")}>покажите все новости</button>.
+          {searching
+            ? "За последние 30 дней совпадений нет — смотрите найденное в архиве канала ниже."
+            : <>Ничего не нашлось. Попробуйте другое слово или <button type="button" onClick={() => chooseFilter("Все")}>покажите все новости</button>.</>}
         </div>
+      )}
+
+      {searching && (archiveLoading || archiveOnly.length > 0) && (
+        <section className="archive-results" aria-label="Найдено в архиве канала">
+          <div className="archive-results__head">
+            <span className="section-kicker">Поиск по всему каналу @lippot</span>
+            <h3>Найдено в архиве {archiveLoading && <i className="site-search__spinner" aria-label="Ищем" />}</h3>
+          </div>
+          <div className="news-grid">
+            {archiveOnly.map((post) => (
+              <NewsCard
+                key={post.id}
+                post={post}
+                query={query}
+                onOpen={(id) => {
+                  setHighlight(query.trim());
+                  window.location.hash = `post-${id}`;
+                  setOpenId(id);
+                }}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {hasMore ? (
@@ -525,7 +692,8 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
           neighbours={neighbours}
           onClose={closePost}
           onOpen={openPost}
-          canOpen={(id) => posts.some((item) => item.id === id)}
+          highlight={highlight}
+          canOpen={(id) => Boolean(findPost(id))}
           onTag={(tag) => {
             closePost();
             chooseFilter(tag);

@@ -410,10 +410,18 @@ function parseChannel(html: string): ChannelInfo {
 const CONTINUATION = /^\s*[\p{Extended_Pictographic}️\s]*\(?\s*продолжени[ея]/iu;
 
 function formatDate(value: string, short = false) {
+  const date = new Date(value);
+  // Год показываем только у старых публикаций (их находит поиск по архиву).
+  const otherYear = date.getUTCFullYear() !== new Date().getUTCFullYear();
   const options: Intl.DateTimeFormatOptions = short
     ? { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" }
     : { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Moscow" };
-  return new Intl.DateTimeFormat("ru-RU", options).format(new Date(value)).replace(" г.", "").replace(",", " ·");
+  if (otherYear) {
+    options.year = "numeric";
+    delete options.hour;
+    delete options.minute;
+  }
+  return new Intl.DateTimeFormat("ru-RU", options).format(date).replace(" г.", "").replace(",", " ·");
 }
 
 function buildPosts(raw: RawPost[]): NewsPost[] {
@@ -449,7 +457,8 @@ function buildPosts(raw: RawPost[]): NewsPost[] {
         .map((part, index) => {
           let clean = sanitizeHtml(part.textHtml);
           if (index === 0) clean = removeTitleLine(clean, lines[used[0]] ?? "");
-          if (index > 0) clean = clean.replace(/^\s*(?:<[^>]+>\s*)*\(?\s*продолжени[ея][^<]*?(\)|<br>)/i, "");
+          // «(продолжение)» убираем и у склеенных частей, и у одиночных продолжений, найденных поиском.
+          if (index > 0 || CONTINUATION.test(part.text)) clean = clean.replace(/^\s*(?:<[^>]+>\s*)*\(?\s*продолжени[ея][^<]*?(\)|<br>)/i, "");
           return toParagraphs(clean);
         })
         .filter(Boolean);
@@ -490,8 +499,11 @@ function buildPosts(raw: RawPost[]): NewsPost[] {
 
 /* ---------- загрузка ---------- */
 
-async function fetchPage(before: number | null) {
-  const url = before ? `${TELEGRAM_FEED}?before=${before}` : TELEGRAM_FEED;
+async function fetchPage(before: number | null, query = "") {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (before) params.set("before", String(before));
+  const url = params.size ? `${TELEGRAM_FEED}?${params}` : TELEGRAM_FEED;
   const response = await fetch(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
@@ -597,4 +609,63 @@ export async function getFeed(): Promise<Feed> {
     });
 
   return inflight;
+}
+
+/* ---------- поиск по всему архиву канала ---------- */
+
+const SEARCH_TTL_MS = 10 * 60 * 1000;
+const searchMemory = new Map<string, { at: number; posts: NewsPost[] }>();
+
+/** Поиск Telegram по каналу: находит публикации за всё время, не только за последний месяц. */
+export async function searchChannel(rawQuery: string): Promise<NewsPost[]> {
+  const query = rawQuery.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (query.length < 2) return [];
+  const key = query.toLowerCase();
+
+  const remembered = searchMemory.get(key);
+  if (remembered && Date.now() - remembered.at < SEARCH_TTL_MS) return remembered.posts;
+
+  const cache = edgeCache();
+  const cacheKey = new Request(`https://feed-cache.lipetskiy-kotel.local/search-v1?q=${encodeURIComponent(key)}`);
+  if (cache) {
+    try {
+      const hit = await cache.match(cacheKey);
+      if (hit) {
+        const posts = (await hit.json()) as NewsPost[];
+        searchMemory.set(key, { at: Date.now(), posts });
+        return posts;
+      }
+    } catch {
+      /* без кеша */
+    }
+  }
+
+  const raw = new Map<number, RawPost>();
+  let before: number | null = null;
+  // Две страницы ответа Telegram — до 40 совпадений, от новых к старым.
+  for (let page = 0; page < 2; page += 1) {
+    let html: string;
+    try {
+      html = await fetchPage(before, query);
+    } catch {
+      break;
+    }
+    const found = parsePage(html);
+    found.forEach((post) => raw.set(post.id, post));
+    const next = html.match(/href="\/s\/lippot\?q=[^"]*?before=(\d+)"/)?.[1];
+    if (!next || found.length < 16) break;
+    before = Number(next);
+  }
+
+  const posts = buildPosts([...raw.values()]);
+  if (searchMemory.size > 60) searchMemory.delete(searchMemory.keys().next().value as string);
+  searchMemory.set(key, { at: Date.now(), posts });
+  if (cache) {
+    try {
+      await cache.put(cacheKey, new Response(JSON.stringify(posts), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=600" } }));
+    } catch {
+      /* без кеша */
+    }
+  }
+  return posts;
 }
