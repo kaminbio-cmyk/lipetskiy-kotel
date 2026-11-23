@@ -14,11 +14,3 @@ export function EyeIcon() {
     </svg>
   );
 }
-
-export function BrandMark({ size = "md" }: { size?: "md" | "lg" }) {
-  return (
-    <span className={`brand__mark brand__mark--${size}`} aria-hidden="true">
-      <img src={size === "lg" ? "/brand/kotel-640.webp" : "/brand/kotel-256.webp"} alt="" width={size === "lg" ? 640 : 256} height={size === "lg" ? 640 : 256} />
-    </span>
-  );
-}

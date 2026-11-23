@@ -69,16 +69,11 @@ h1, h2, h3 { font-weight: 850; }
 /* ---------- шапка ---------- */
 .site-header { position: relative; z-index: 6; background: var(--surface); border-bottom: 1px solid var(--line); }
 .site-header__main { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.brand { display: inline-flex; align-items: center; gap: 14px; min-width: 0; }
-.brand__copy { min-width: 0; display: flex; flex-direction: column; }
-.brand strong { display: flex; align-items: baseline; gap: 8px; color: #192235; font-size: 24px; font-weight: 900; line-height: 1; letter-spacing: .01em; white-space: nowrap; }
-.brand strong b { font: inherit; background: var(--fire-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.brand small { margin-top: 7px; color: #7f8794; font-size: 10px; font-weight: 700; line-height: 1; letter-spacing: .11em; text-transform: uppercase; white-space: nowrap; }
-.brand__mark { position: relative; display: block; flex: none; width: 56px; height: 56px; border-radius: 50%; background: #0b0d12; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px rgba(255, 90, 31, .55), 0 8px 22px rgba(214, 40, 59, .32); overflow: hidden; transition: box-shadow .3s ease, transform .3s ease; }
-.brand__mark img { width: 100%; height: 100%; object-fit: cover; }
-.brand:hover .brand__mark { transform: rotate(-4deg) scale(1.04); box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(255, 90, 31, .8), 0 10px 30px rgba(255, 90, 31, .45); }
-.brand__mark--lg { width: 210px; height: 210px; box-shadow: 0 0 0 4px rgba(255, 255, 255, .9), 0 0 0 9px rgba(255, 90, 31, .35), 0 24px 70px rgba(255, 77, 31, .45); animation: kotel-glow 4.5s ease-in-out infinite; }
-@keyframes kotel-glow { 50% { box-shadow: 0 0 0 4px rgba(255, 255, 255, .9), 0 0 0 12px rgba(255, 90, 31, .22), 0 24px 90px rgba(255, 77, 31, .7); } }
+/* Логотип — готовые SVG-файлы (квадратный шрифт только в самом логотипе). */
+.brand { display: inline-flex; align-items: center; flex: none; min-width: 0; }
+.brand picture { display: block; }
+.brand__logo { display: block; width: auto; height: 54px; max-width: 100%; }
+.about-band__mark { width: 210px; height: 210px; border-radius: 26%; box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 24px 70px rgba(0, 0, 0, .45); }
 .header-tools { display: flex; align-items: center; gap: 8px; }
 .header-date { display: inline-block; margin-right: 6px; color: #8a919c; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .header-date::first-letter { text-transform: uppercase; }
@@ -348,8 +343,8 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 /* ---------- подвал ---------- */
 .site-footer { background: #0b101b; color: #fff; }
 .site-footer__inner { min-height: 230px; display: grid; grid-template-columns: 1.8fr .7fr .7fr 1fr; align-items: start; gap: 50px; padding-block: 54px; }
-.brand--footer strong { color: #fff; }
-.brand--footer small { color: #8892a3; }
+.brand--footer { justify-self: start; align-self: start; padding: 14px 18px; border-radius: 16px; background: #fff; }
+.brand--footer .brand__logo { height: 46px; }
 .site-footer__inner > div:not(.brand) { display: flex; flex-direction: column; gap: 9px; font-size: 13px; }
 .site-footer__inner > div:not(.brand) strong { margin-bottom: 4px; color: #aeb7c6; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
 .site-footer__inner a { color: #dbe0e8; }
@@ -381,7 +376,8 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .archive-toolbar { grid-template-columns: 1fr; }
   .site-footer__inner { grid-template-columns: 1.5fr .7fr .7fr; }
   .site-footer p { grid-column: 1 / -1; text-align: left; }
-  .brand__mark--lg { width: 160px; height: 160px; }
+  .about-band__mark { width: 160px; height: 160px; }
+  .brand__logo { height: 44px; }
 }
 
 @media (max-width: 1100px) {
@@ -396,10 +392,8 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .site-search { order: 3; flex: 1 1 100%; max-width: none; margin: -4px 0 12px; }
   .site-search__panel { width: 100%; max-height: 62vh; }
   .site-search__field kbd { display: none; }
-  .brand { gap: 11px; }
-  .brand strong { gap: 5px; font-size: 19px; }
-  .brand small { margin-top: 5px; font-size: 8px; }
-  .brand__mark { width: 46px; height: 46px; }
+  .brand { flex: 1 1 0; min-width: 0; }
+  .brand__logo { height: 30px; }
   .subscribe-pill span { display: none; }
   .subscribe-pill { padding: 0 6px 0 11px; }
   .category-nav { width: 100%; padding-inline: 13px; }
@@ -425,7 +419,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .about-band { padding: 60px 0; background-position: 70% center; }
   .about-band__inner { grid-template-columns: 1fr; gap: 26px; }
   .about-band__stats { grid-template-columns: repeat(2, 1fr); }
-  .brand__mark--lg { width: 132px; height: 132px; }
+  .about-band__mark { width: 132px; height: 132px; }
   .site-footer__inner { grid-template-columns: 1fr 1fr; gap: 34px; }
   .brand--footer, .site-footer p { grid-column: 1 / -1; }
   .section-heading { align-items: flex-start; flex-direction: column; }
@@ -435,9 +429,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 @media (max-width: 520px) {
   .shell { width: calc(100% - 20px); }
   .site-header__main { min-height: 66px; gap: 8px; }
-  .brand small { display: none; }
-  .brand strong { gap: 4px; font-size: 15px; }
-  .brand__mark { width: 40px; height: 40px; }
+  .brand__logo { height: 24px; }
   .header-tools { gap: 5px; }
   .icon-button, .subscribe-pill, .max-pill { height: 36px; }
   .icon-button { width: 36px; }
@@ -474,9 +466,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 @media (max-width: 360px) {
   :root { --radius-xl: 20px; --radius-lg: 17px; }
   .shell { width: calc(100% - 16px); }
-  .brand { gap: 8px; }
-  .brand strong { font-size: 13px; gap: 3px; }
-  .brand__mark { width: 34px; height: 34px; }
+  .brand__logo { height: 21px; }
   .icon-button { display: none; }
   .category-nav a { padding: 7px 9px; font-size: 11px; }
   .lead-story__media { height: 200px; }
@@ -491,7 +481,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 
 @media (max-width: 320px) {
   .max-pill { display: none; }
-  .brand strong { font-size: 12px; }
+  .brand__logo { height: 20px; }
   .section-heading h2 { font-size: 28px; }
 }
 

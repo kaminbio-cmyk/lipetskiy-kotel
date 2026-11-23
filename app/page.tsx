@@ -3,7 +3,7 @@ import { CategoryNav } from "./CategoryNav";
 import { NewsGrid } from "./NewsGrid";
 import { FilterLink, TopicChips } from "./TopicChips";
 import { SiteSearch, type SearchItem } from "./SiteSearch";
-import { BrandMark, EyeIcon, TelegramIcon } from "./icons";
+import { EyeIcon, TelegramIcon } from "./icons";
 import { EDITOR_EMAIL, MAX_CHANNEL, TELEGRAM_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
 import { NAV_CATEGORIES, formatCount, plural } from "./lib/format";
 
@@ -77,11 +77,10 @@ export default async function Home() {
       <header className="site-header">
         <div className="shell site-header__main">
           <a className="brand" href="#top" aria-label="Липецкий котёл — на главную">
-            <BrandMark />
-            <span className="brand__copy">
-              <strong><span>ЛИПЕЦКИЙ</span> <b>КОТЁЛ</b></strong>
-              <small>Новости и аналитика Липецкого края</small>
-            </span>
+            <picture>
+              <source media="(max-width: 760px)" srcSet="/brand/logo-kotel-compact.svg" />
+              <img className="brand__logo" src="/brand/logo-kotel.svg" alt="Липецкий котёл — информационно-аналитический канал" width="1821" height="281" />
+            </picture>
           </a>
           <SiteSearch items={searchItems} />
           <div className="header-tools">
@@ -236,7 +235,7 @@ export default async function Home() {
 
         <section className="about-band" id="about">
           <div className="shell about-band__inner">
-            <BrandMark size="lg" />
+            <img className="about-band__mark" src="/brand/logo-mark-badge.svg" alt="" width="210" height="210" />
             <div className="about-band__copy">
               <span className="section-kicker">Telegram-канал @lippot</span>
               <h2>Липецкий котёл</h2>
@@ -259,10 +258,9 @@ export default async function Home() {
 
       <footer className="site-footer">
         <div className="shell site-footer__inner">
-          <div className="brand brand--footer">
-            <BrandMark />
-            <span className="brand__copy"><strong><span>ЛИПЕЦКИЙ</span> <b>КОТЁЛ</b></strong><small>Новости и аналитика Липецкого края</small></span>
-          </div>
+          <a className="brand brand--footer" href="#top" aria-label="Липецкий котёл — наверх">
+            <img className="brand__logo" src="/brand/logo-kotel.svg" alt="Липецкий котёл — информационно-аналитический канал" width="1821" height="281" />
+          </a>
           <div>
             <strong>Рубрики</strong>
             {["Липецк", "Регион", "Экономика", "Власть", "Суд и право", "ЖКХ"].map((tag) => (
