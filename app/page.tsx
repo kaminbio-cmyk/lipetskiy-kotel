@@ -1,7 +1,7 @@
 import { BriefTabs, type BriefItem } from "./BriefTabs";
 import { CategoryNav } from "./CategoryNav";
 import { NewsGrid } from "./NewsGrid";
-import { FilterLink, TopicChips } from "./TopicChips";
+import { FilterLink, ToTopLink, TopicChips } from "./TopicChips";
 import { SiteSearch, type SearchItem } from "./SiteSearch";
 import { EyeIcon, TelegramIcon } from "./icons";
 import { EDITOR_EMAIL, TELEGRAM_CHANNEL, VK_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
@@ -235,7 +235,9 @@ export default async function Home() {
 
         <section className="about-band" id="about">
           <div className="shell about-band__inner">
-            <img className="about-band__mark" src="/brand/logo-mark-badge.svg" alt="" width="210" height="210" />
+            <ToTopLink className="about-band__home" label="Липецкий котёл — наверх">
+              <img className="about-band__mark" src="/brand/logo-mark-badge.svg" alt="" width="210" height="210" />
+            </ToTopLink>
             <div className="about-band__copy">
               <span className="section-kicker">Telegram-канал @lippot</span>
               <h2>Липецкий котёл</h2>
@@ -258,9 +260,9 @@ export default async function Home() {
 
       <footer className="site-footer">
         <div className="shell site-footer__inner">
-          <a className="brand brand--footer" href="#top" aria-label="Липецкий котёл — наверх">
+          <ToTopLink className="brand brand--footer" label="Липецкий котёл — наверх">
             <img className="brand__logo" src="/brand/logo-kotel.svg" alt="Липецкий котёл — информационно-аналитический канал" width="1821" height="281" />
-          </a>
+          </ToTopLink>
           <div>
             <strong>Рубрики</strong>
             {["Липецк", "Регион", "Экономика", "Власть", "Суд и право", "ЖКХ"].map((tag) => (

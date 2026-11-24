@@ -20,25 +20,39 @@ export const NAV_TO_TAG: Record<string, string> = {
   "Все новости": "Все",
 };
 
+// По указанию редакции: вместо «Политики» — «Общество», вместо «Транспорта» — «Спорт».
 export const NAV_CATEGORIES = [
   "Все новости",
   "Липецк",
   "Регион",
   "Экономика",
   "Власть",
-  "Политика",
+  "Общество",
   "Суд и право",
   "ЖКХ",
   "Происшествия",
   "Аналитика",
   "Нам пишут",
   "Россия и мир",
-  "Общество",
   "Здоровье",
   "Образование",
-  "Транспорт",
   "Спорт",
 ];
+
+/** Замены рубрик в фильтрах ленты и рубрики, которые показываются всегда. */
+const FILTER_SWAP: Record<string, string> = { "Политика": "Общество", "Транспорт": "Спорт" };
+const FILTER_ALWAYS = ["Общество", "Спорт"];
+
+/** Фильтры ленты: самые частые темы, «Политика» → «Общество», «Транспорт» → «Спорт», «Общество» и «Спорт» есть всегда. */
+export function feedFilters(popular: string[]) {
+  const list: string[] = [];
+  for (const tag of popular) {
+    const name = FILTER_SWAP[tag] ?? tag;
+    if (!list.includes(name)) list.push(name);
+  }
+  for (const tag of FILTER_ALWAYS) if (!list.includes(tag)) list.push(tag);
+  return list;
+}
 
 export function emitFilter(tag: string) {
   window.dispatchEvent(new CustomEvent("lk:filter", { detail: tag }));

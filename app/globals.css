@@ -73,7 +73,10 @@ h1, h2, h3 { font-weight: 850; }
 .brand { display: inline-flex; align-items: center; flex: none; min-width: 0; }
 .brand picture { display: block; }
 .brand__logo { display: block; width: auto; height: 54px; max-width: 100%; }
-.about-band__mark { width: 210px; height: 210px; border-radius: 26%; box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 24px 70px rgba(0, 0, 0, .45); }
+.about-band__home { display: block; flex: none; border-radius: 26%; transition: transform .2s ease; }
+.about-band__home:hover, .brand--footer:hover { transform: translateY(-2px); }
+.about-band__home:active, .brand--footer:active { transform: scale(.97); }
+.about-band__mark { display: block; width: 210px; height: 210px; border-radius: 26%; box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 24px 70px rgba(0, 0, 0, .45); }
 .header-tools { display: flex; align-items: center; gap: 8px; }
 .header-date { display: inline-block; margin-right: 6px; color: #8a919c; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .header-date::first-letter { text-transform: uppercase; }
@@ -345,7 +348,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 /* ---------- подвал ---------- */
 .site-footer { background: #0b101b; color: #fff; }
 .site-footer__inner { min-height: 230px; display: grid; grid-template-columns: 1.8fr .7fr .7fr 1fr; align-items: start; gap: 50px; padding-block: 54px; }
-.brand--footer { justify-self: start; align-self: start; padding: 14px 18px; border-radius: 16px; background: #fff; }
+.brand--footer { justify-self: start; align-self: start; transition: transform .2s ease; padding: 14px 18px; border-radius: 16px; background: #fff; }
 .brand--footer .brand__logo { height: 46px; }
 .site-footer__inner > div:not(.brand) { display: flex; flex-direction: column; gap: 9px; font-size: 13px; }
 .site-footer__inner > div:not(.brand) strong { margin-bottom: 4px; color: #aeb7c6; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }

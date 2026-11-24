@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NewsPost } from "./lib/telegram";
-import { formatCount, plural } from "./lib/format";
+import { feedFilters, formatCount, plural } from "./lib/format";
 import { EyeIcon, TelegramIcon } from "./icons";
 import { Highlight } from "./SiteSearch";
 
@@ -381,10 +381,12 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
   const filters = useMemo(() => {
     const counts = new Map<string, number>();
     posts.forEach((post) => post.tags.forEach((tag) => counts.set(tag, (counts.get(tag) ?? 0) + 1)));
-    const popular = [...counts.entries()]
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ru"))
-      .slice(0, 11)
-      .map(([tag]) => tag);
+    const popular = feedFilters(
+      [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ru"))
+        .slice(0, 11)
+        .map(([tag]) => tag)
+    );
     if (active !== "Все" && !popular.includes(active)) popular.push(active);
     return ["Все", ...popular];
   }, [posts, active]);

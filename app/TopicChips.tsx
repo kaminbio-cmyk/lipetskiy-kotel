@@ -23,6 +23,24 @@ export function FilterLink({ tag, children }: { tag: string; children: React.Rea
   );
 }
 
+/** Логотип-ссылка «наверх»: плавно прокручивает к шапке и убирает #якорь из адреса. */
+export function ToTopLink({ className, label, children }: { className?: string; label: string; children: React.ReactNode }) {
+  return (
+    <a
+      className={className}
+      href="#top"
+      aria-label={label}
+      onClick={(event) => {
+        event.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (window.location.hash) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function SearchButton() {
   return (
     <a

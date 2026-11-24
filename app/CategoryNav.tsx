@@ -20,7 +20,7 @@ export function CategoryNav({ categories, counts }: CategoryNavProps) {
   return (
     <nav className="category-nav shell" aria-label="Рубрики">
       {categories
-        .filter((category) => category === "Все новости" || (counts[NAV_TO_TAG[category] ?? category] ?? 0) > 0)
+        // все рубрики меню видны всегда, даже если за месяц по ней нет публикаций
         .map((category) => {
           const tag = NAV_TO_TAG[category] ?? category;
           const isActive = active === tag;
