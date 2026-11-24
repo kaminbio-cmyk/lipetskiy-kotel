@@ -77,14 +77,14 @@ h1, h2, h3 { font-weight: 850; }
 .about-band__home:hover, .brand--footer:hover { transform: translateY(-2px); }
 .about-band__home:active, .brand--footer:active { transform: scale(.97); }
 .about-band__mark { display: block; width: 210px; height: 210px; border-radius: 26%; box-shadow: 0 0 0 4px rgba(255, 255, 255, .14), 0 24px 70px rgba(0, 0, 0, .45); }
-.header-tools { display: flex; align-items: center; gap: 8px; }
+.header-tools { display: flex; flex: none; align-items: center; gap: 8px; }
 .header-date { display: inline-block; margin-right: 6px; color: #8a919c; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .header-date::first-letter { text-transform: uppercase; }
 .icon-button { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: var(--ios-grouped); color: var(--ink); transition: background .16s ease, color .16s ease, transform .1s ease; }
 .icon-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; }
 .icon-button:hover { background: #e8f5fd; color: var(--primary-dark); }
 .icon-button:active, .subscribe-pill:active, .vk-pill:active { transform: scale(.95); }
-.subscribe-pill { height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 750; box-shadow: 0 6px 16px rgba(21, 155, 229, .3); transition: background .16s ease, transform .1s ease; }
+.subscribe-pill { height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 8px 0 14px; border-radius: 999px; white-space: nowrap; background: var(--primary); color: #fff; font-size: 13px; font-weight: 750; box-shadow: 0 6px 16px rgba(21, 155, 229, .3); transition: background .16s ease, transform .1s ease; }
 .subscribe-pill b { padding: 3px 9px; border-radius: 999px; background: rgba(255, 255, 255, .22); font-size: 12px; }
 .subscribe-pill:hover { background: var(--primary-dark); }
 .vk-pill { height: 40px; display: grid; place-items: center; padding: 0 14px; border-radius: 999px; background: #0077FF; color: #fff; font-size: 13px; font-weight: 900; letter-spacing: .03em; box-shadow: 0 6px 16px rgba(0, 119, 255, .28); transition: transform .1s ease, background .16s ease; }
@@ -393,8 +393,9 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 
 @media (max-width: 760px) {
   .shell { width: min(100% - 26px, 1240px); }
-  .site-header__main { min-height: 74px; gap: 12px; flex-wrap: wrap; }
-  .site-search { order: 3; flex: 1 1 100%; max-width: none; margin: -4px 0 12px; }
+  /* отступ сверху: логотип и кнопки Telegram/VK не прижимаются к краю экрана */
+  .site-header__main { min-height: 74px; gap: 12px; flex-wrap: wrap; padding-top: 12px; }
+  .site-search { order: 3; flex: 1 1 100%; max-width: none; margin: 0 0 12px; }
   .site-search__panel { width: 100%; max-height: 62vh; }
   .site-search__field kbd { display: none; }
   .brand { flex: 1 1 0; min-width: 0; }
@@ -433,7 +434,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 
 @media (max-width: 520px) {
   .shell { width: calc(100% - 20px); }
-  .site-header__main { min-height: 66px; gap: 8px; }
+  .site-header__main { min-height: 66px; gap: 10px 8px; padding-top: 10px; }
   .brand__logo { height: 24px; }
   .header-tools { gap: 5px; }
   .icon-button, .subscribe-pill, .vk-pill { height: 36px; }
