@@ -4,7 +4,7 @@
 # Telegram с хостинга недоступен — ленту, фото и видео собирает GitHub Actions и кладёт в ветку `site`.
 # Отсюда только git fetch (приходят лишь изменения) и rsync в папку сайта.
 
-REPO="${KOTEL_REPO:-https://github.com/OWNER/REPO.git}"
+REPO="${KOTEL_REPO:-https://github.com/kaminbio-cmyk/lipetskiy-kotel.git}"
 SITE_DIR="${KOTEL_SITE_DIR:-$HOME/public_html}"
 SRC="$HOME/.kotel-src"
 LOCK="$HOME/.kotel-sync.lock"
@@ -28,6 +28,6 @@ REV="$(git rev-parse HEAD)"
 [ "$REV" = "$(cat "$STAMP" 2>/dev/null)" ] && exit 0
 
 # Файлы хостинга (.htaccess, проверка домена) не трогаем; всё остальное — точная копия сборки.
-rsync -a --delete --exclude .git --exclude .build-info --exclude .htaccess --exclude .well-known "$SRC/" "$SITE_DIR/" \
+rsync -a --delete --exclude .git --exclude .build-info --exclude .htaccess --exclude .well-known --exclude cgi-bin "$SRC/" "$SITE_DIR/" \
   && echo "$REV" > "$STAMP" \
   && echo "$(date '+%F %T') updated to $REV ($(cat .build-info 2>/dev/null | cut -c1-12))"
