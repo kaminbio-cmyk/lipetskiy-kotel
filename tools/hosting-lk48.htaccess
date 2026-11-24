@@ -1,0 +1,39 @@
+# Копия ~/public_html/.htaccess на хостинге lk48.ru (SpaceWeb, аккаунт lk48ru). rsync из tools/hosting-sync.sh этот файл не трогает.
+AddDefaultCharset utf-8
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+Options -Indexes
+RewriteEngine On
+# Проверка Let's Encrypt (выпуск и продление сертификата) — без переадресаций
+RewriteRule ^\.well-known/ - [L]
+# www -> без www; http -> https только при явном X-Forwarded-Proto: http (SSL на прокси SpaceWeb, %{HTTPS} всегда off — иначе петля)
+RewriteCond %{HTTP_HOST} ^www\.lk48\.ru$ [NC]
+RewriteRule ^ https://lk48.ru%{REQUEST_URI} [R=301,L]
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteCond %{HTTP:X-Forwarded-Proto} ^http$ [NC]
+RewriteRule ^ https://lk48.ru%{REQUEST_URI} [R=301,L]
+# /index.html -> /
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^index\.html$ https://lk48.ru/ [R=301,L]
+AddType application/json .json
+AddType image/webp .webp
+AddType video/mp4 .mp4
+AddType application/manifest+json .webmanifest
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/html "access plus 0 seconds"
+ExpiresByType application/json "access plus 0 seconds"
+ExpiresByType image/jpeg "access plus 7 days"
+ExpiresByType image/webp "access plus 30 days"
+ExpiresByType image/png "access plus 30 days"
+ExpiresByType image/svg+xml "access plus 30 days"
+ExpiresByType video/mp4 "access plus 7 days"
+ExpiresByType text/css "access plus 1 year"
+ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+<IfModule mod_headers.c>
+# Лента и данные обновляются каждые 10 минут — браузер всегда спрашивает свежие
+<FilesMatch "\.(html|json|rsc)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+</IfModule>
