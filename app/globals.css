@@ -162,6 +162,20 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 .brief-more { display: block; margin: 10px 16px 14px; padding: 10px; border-radius: 12px; background: var(--ios-grouped); color: #5f6672; font-size: 12px; font-weight: 750; text-align: center; transition: background .16s ease, color .16s ease, transform .1s ease; }
 .brief-more:hover { background: #eaf6fc; color: var(--primary-dark); }
 .brief-more:active { transform: scale(.98); }
+/* Колонка тянется до низа главных новостей справа; свободное место занимают «Читают сейчас» и «Обсуждают» */
+.front > .brief-column { align-self: stretch; display: flex; flex-direction: column; }
+.brief-fill { position: relative; flex: 1 1 auto; min-height: 0; }
+.brief-fill__inner { position: absolute; inset: 0; overflow: hidden; }
+.brief-fill [hidden] { display: none !important; }
+.brief-fill__group { padding: 14px 16px 2px; border-top: 1px solid var(--ios-hairline); }
+.brief-fill__head { display: flex; align-items: center; gap: 7px; margin: 0; color: #8a919c; font-size: 11px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.brief-fill__head::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+.brief-fill__group--hot .brief-fill__head::before { background: var(--fire); }
+.brief-list--fill { padding: 2px 0 0; }
+.brief-list--fill a { padding: 10px 0 9px; }
+.brief-list--fill strong { -webkit-line-clamp: 2; }
+.brief-list--fill small { margin-top: 4px; }
+.brief-fill__group--hot .brief-list__rank { color: #ffc2a8; }
 .social-row { min-height: 50px; display: flex; align-items: center; gap: 11px; padding: 0 16px; border-top: 1px solid var(--ios-hairline); font-size: 13px; transition: background .16s ease; }
 .social-row > span { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 900; }
 .social-row > span .tg-icon { width: 15px; height: 15px; }
@@ -387,6 +401,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .front { grid-template-columns: 1fr; }
   .front__content { grid-row: 1; }
   .brief-column { grid-row: 2; }
+  .brief-fill { display: none; }
   .recommend__grid { grid-template-columns: repeat(2, 1fr); }
   .topics { grid-template-columns: 1fr; gap: 14px; }
   .archive-toolbar { grid-template-columns: 1fr; }

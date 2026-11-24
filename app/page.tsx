@@ -1,4 +1,5 @@
 import { BriefTabs, type BriefItem } from "./BriefTabs";
+import { BriefFill } from "./BriefFill";
 import { CategoryNav } from "./CategoryNav";
 import { NewsGrid } from "./NewsGrid";
 import { FilterLink, ToTopLink, TopicChips } from "./TopicChips";
@@ -49,6 +50,14 @@ export default async function Home() {
   const mostRead = [...pool].sort((a, b) => b.viewsCount - a.viewsCount).slice(0, 6);
   const discussed = [...pool].filter((post) => post.reactionsCount > 0).sort((a, b) => b.reactionsCount - a.reactionsCount).slice(0, 6);
   const fresh = posts.filter((post) => post.id !== lead?.id).slice(0, 6);
+  // Низ левой колонки: читаемое и обсуждаемое за неделю, без того, что уже стоит справа крупно.
+  const fillRead = [...pool].filter((post) => !used.has(post.id)).sort((a, b) => b.viewsCount - a.viewsCount).slice(0, 12);
+  const fillReadTop = new Set(fillRead.slice(0, 6).map((post) => post.id));
+  const fillHot = [...pool]
+    .filter((post) => post.reactionsCount > 0 && !used.has(post.id) && !fillReadTop.has(post.id))
+    .sort((a, b) => b.reactionsCount - a.reactionsCount)
+    .slice(0, 12);
+  const reactionsOf = (post: NewsPost) => post.reactions.slice(0, 3).map((r) => `${r.emoji}${r.count}`).join(" ");
   const recommended = [...posts]
     .filter((post) => !used.has(post.id))
     .slice(0, 40)
@@ -132,6 +141,12 @@ export default async function Home() {
               <span>VK</span>
               <em>Мы ВКонтакте</em>
             </a>
+            <BriefFill
+              sections={[
+                { key: "read", label: "Читают сейчас", items: fillRead.map((post) => brief(post, `${formatCount(post.views)} просм.`)) },
+                { key: "hot", label: "Обсуждают", items: fillHot.map((post) => brief(post, reactionsOf(post))) },
+              ]}
+            />
           </aside>
 
           <div className="front__content">
