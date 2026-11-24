@@ -90,12 +90,23 @@ h1, h2, h3 { font-weight: 850; }
 .vk-pill { height: 40px; display: grid; place-items: center; padding: 0 14px; border-radius: 999px; background: #0077FF; color: #fff; font-size: 13px; font-weight: 900; letter-spacing: .03em; box-shadow: 0 6px 16px rgba(0, 119, 255, .28); transition: transform .1s ease, background .16s ease; }
 .vk-pill:hover { background: #0062d1; }
 
-.category-nav { min-height: 50px; display: flex; align-items: center; gap: 4px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: none; border-top: 1px solid #f0f1f2; -webkit-overflow-scrolling: touch; }
+.category-nav { position: relative; min-height: 50px; display: flex; align-items: center; gap: 4px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: none; border-top: 1px solid #f0f1f2; -webkit-overflow-scrolling: touch; }
+/* после расчёта ширины лента не прокручивается: целые рубрики + «Ещё» */
+.category-nav.is-fitted { overflow: visible; }
 .category-nav::-webkit-scrollbar { display: none; }
-.category-nav a { flex: none; scroll-snap-align: start; padding: 8px 13px; border-radius: 999px; color: #4f5866; font-size: 13px; font-weight: 800; line-height: 1.15; white-space: nowrap; transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .1s ease; }
-.category-nav a:hover { background: #eaf6fc; color: var(--primary-dark); }
-.category-nav a.is-active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(21, 155, 229, .25); }
-.category-nav a:active { background: var(--primary-dark); color: #fff; transform: scale(.96); }
+.category-nav__item { flex: none; scroll-snap-align: start; padding: 8px 13px; border-radius: 999px; color: #4f5866; font-size: 13px; font-weight: 800; line-height: 1.15; white-space: nowrap; transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .1s ease; }
+.category-nav__item:hover { background: #eaf6fc; color: var(--primary-dark); }
+.category-nav__item.is-active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(21, 155, 229, .25); }
+.category-nav__item:active { background: var(--primary-dark); color: #fff; transform: scale(.96); }
+.category-nav__more { position: relative; flex: none; }
+.category-nav__more-button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+.category-nav__more-button svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .16s ease; }
+.category-nav__more-button.is-open { background: #eaf6fc; color: var(--primary-dark); }
+.category-nav__more-button.is-open svg { transform: rotate(180deg); }
+.category-nav__menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; min-width: 190px; display: grid; gap: 2px; padding: 6px; background: #fff; border: 1px solid var(--ios-hairline); border-radius: 16px; box-shadow: 0 18px 44px rgba(15, 23, 42, .18); }
+.category-nav__menu .category-nav__menu-item { padding: 11px 14px; border-radius: 11px; }
+/* невидимая копия рубрик для замера: нулевая коробка с обрезкой, чтобы не раздвигать страницу */
+.category-nav__measure { position: absolute; top: 0; left: 0; width: 0; height: 0; display: flex; overflow: hidden; visibility: hidden; pointer-events: none; }
 
 /* ---------- поиск в шапке ---------- */
 mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; }
@@ -415,6 +426,12 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .subscribe-pill span { display: none; }
   .subscribe-pill { padding: 0 6px 0 11px; }
   .site-search { flex-basis: 260px; }
+  /* поле поиска стоит посередине шапки — панель подсказок выравниваем по его правому краю, чтобы не вылезала за экран */
+  .site-search__panel { left: auto; right: 0; }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .site-search__panel { width: min(520px, calc(100vw - 48px)); }
 }
 
 @media (max-width: 760px) {
@@ -422,7 +439,10 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   /* отступ сверху: логотип и кнопки Telegram/VK не прижимаются к краю экрана */
   .site-header__main { min-height: 74px; gap: 12px; flex-wrap: wrap; padding-top: 12px; }
   .site-search { order: 3; flex: 1 1 100%; max-width: none; margin: 0 0 12px; }
-  .site-search__panel { width: 100%; max-height: 62vh; }
+  .site-search__panel { left: 0; right: auto; width: 100%; max-height: 62vh; }
+  /* «Ещё» на телефоне — во всю ширину меню рубрик, в две колонки */
+  .category-nav__more { position: static; }
+  .category-nav__menu { left: 13px; right: 13px; min-width: 0; grid-template-columns: 1fr 1fr; }
   .site-search__field kbd { display: none; }
   .brand { flex: 1 1 0; min-width: 0; }
   .brand__logo { height: 30px; }
@@ -469,7 +489,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .subscribe-pill b { display: none; }
   .subscribe-pill { width: 36px; padding: 0; justify-content: center; }
   .category-nav { min-height: 46px; padding-inline: 10px; gap: 3px; }
-  .category-nav a { padding: 8px 11px; font-size: 12px; }
+  .category-nav__item { padding: 8px 11px; font-size: 12px; }
   .ticker { height: 38px; font-size: 12px; }
   .front { padding-block: 12px 26px; }
   .lead-story__media { height: 240px; }
@@ -500,7 +520,7 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .shell { width: calc(100% - 16px); }
   .brand__logo { height: 21px; }
   .icon-button { display: none; }
-  .category-nav a { padding: 7px 9px; font-size: 11px; }
+  .category-nav__item { padding: 7px 9px; font-size: 11px; }
   .lead-story__media { height: 200px; }
   .lead-story strong { font-size: 20px; line-height: 1.15; }
   .news-card__body { padding: 14px 14px 15px; }
@@ -509,10 +529,11 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
   .reader h1 { font-size: 24px; }
   .reader__text { font-size: 16px; }
   .about-band__stats { grid-template-columns: 1fr; }
+  .filters { margin-inline: -8px; padding-inline: 8px; }
 }
 
 @media (max-width: 320px) {
-  .vk-pill { display: none; }
+  .vk-pill { padding: 0 9px; }
   .brand__logo { height: 20px; }
   .section-heading h2 { font-size: 28px; }
 }
