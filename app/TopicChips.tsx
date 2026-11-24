@@ -33,6 +33,10 @@ export function ToTopLink({ className, label, children }: { className?: string; 
       onClick={(event) => {
         event.preventDefault();
         window.scrollTo({ top: 0, behavior: "smooth" });
+        // Страховка: догружающиеся картинки ленты могут сбить плавную прокрутку — тогда доводим до шапки сразу.
+        window.setTimeout(() => {
+          if (window.scrollY > 2) window.scrollTo({ top: 0, behavior: "instant" });
+        }, 1100);
         if (window.location.hash) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
       }}
     >
