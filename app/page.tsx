@@ -90,7 +90,7 @@ export default async function Home() {
               <span>Подписаться</span>
               {channel.subscribers && <b>{formatCount(channel.subscribers)}</b>}
             </a>
-            <a className="vk-pill" href={VK_CHANNEL} target="_blank" rel="noreferrer" aria-label="Сообщество во ВКонтакте">VK</a>
+            <a className="vk-pill" href={VK_CHANNEL} target="_blank" rel="noreferrer" aria-label="Сообщество ВКонтакте">VK</a>
           </div>
         </div>
         <CategoryNav categories={NAV_CATEGORIES} counts={tagCounts} />
@@ -130,7 +130,7 @@ export default async function Home() {
             </a>
             <a className="social-row social-row--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">
               <span>VK</span>
-              <em>Мы во ВКонтакте</em>
+              <em>Мы ВКонтакте</em>
             </a>
           </aside>
 
@@ -244,7 +244,7 @@ export default async function Home() {
               <p>{channel.description || "Аналитика, события и то, что скрывается за статистикой: социально-экономическая ситуация в Липецке, области и стране."}</p>
               <div className="about-band__buttons">
                 <a className="button button--primary" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer"><TelegramIcon /> Подписаться в Telegram</a>
-                <a className="button button--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">Мы во ВКонтакте</a>
+                <a className="button button--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">Мы ВКонтакте</a>
                 <a className="button button--glass" href={`mailto:${EDITOR_EMAIL}`}>Написать в редакцию</a>
               </div>
             </div>
