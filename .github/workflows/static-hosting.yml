@@ -1,4 +1,4 @@
-# Статичная копия «Липецкого котла» для обычного хостинга (SpaceWeb), откуда Telegram недоступен.
+# Статичная копия «Липецкого котла» для обычного хостинга (SpaceWeb, https://lk48.ru), откуда Telegram недоступен.
 # Каждые 15 минут: забрать ленту @lippot, фото и видео, собрать сайт и выложить в ветку `site`.
 # Хостинг сам забирает ветку `site` (скрипт tools/hosting-sync.sh по расписанию cron).
 name: Static copy for hosting
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      LK_SITE_ORIGIN: ${{ vars.LK_SITE_ORIGIN || 'http://nestor07ma.temp.swtest.ru' }}
+      LK_SITE_ORIGIN: ${{ vars.LK_SITE_ORIGIN || 'https://lk48.ru' }}
     steps:
       - uses: actions/checkout@v4
 

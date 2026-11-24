@@ -22,7 +22,7 @@ const arg = (name: string, fallback = "") => {
 };
 const OUT = path.resolve(ROOT, arg("out", "public"));
 const PREV = arg("prev") ? path.resolve(arg("prev")) : "";
-const ORIGIN = process.env.LK_SITE_ORIGIN || "http://nestor07ma.temp.swtest.ru";
+const ORIGIN = process.env.LK_SITE_ORIGIN || "https://lk48.ru";
 const FEED_DAYS = 30;
 const ARCHIVE_DAYS = 90;
 const MAX_VIDEO_BYTES = 45 * 1024 * 1024; // крупнее — оставляем ссылку на Telegram (GitHub не любит файлы больше 50 МБ)
