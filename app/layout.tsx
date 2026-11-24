@@ -1,12 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { STATIC_FEED } from "./lib/telegram";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
+async function siteOrigin() {
+  // Статичная копия для хостинга собирается заранее — адрес сайта берём из ленты, заголовков запроса там нет.
+  if (STATIC_FEED?.static?.origin) return STATIC_FEED.static.origin;
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
+  return `${protocol}://${host}`;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await siteOrigin();
 
   return {
     title: "Липецкий котёл — новости и аналитика Липецка и области",

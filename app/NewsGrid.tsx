@@ -5,6 +5,7 @@ import type { NewsPost } from "./lib/telegram";
 import { feedFilters, formatCount, plural } from "./lib/format";
 import { EyeIcon, TelegramIcon } from "./icons";
 import { Highlight } from "./SiteSearch";
+import { fetchLatest, searchArchive } from "./lib/archive";
 
 const PAGE_SIZE = 12;
 const POLL_MS = 90_000;
@@ -358,7 +359,7 @@ function NewsCard({ post, query, onOpen }: { post: NewsPost; query: string; onOp
   );
 }
 
-export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
+export function NewsGrid({ posts: initialPosts, staticMode = false }: { posts: NewsPost[]; staticMode?: boolean }) {
   const [posts, setPosts] = useState(initialPosts);
   const [pending, setPending] = useState<NewsPost[]>([]);
   const [active, setActive] = useState("Все");
@@ -491,9 +492,8 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
-        const data = (await response.json()) as { posts: NewsPost[] };
-        setArchive(data.posts ?? []);
+        const found = await searchArchive(q, staticMode, controller.signal);
+        if (!controller.signal.aborted) setArchive(found);
       } catch {
         /* отменено или нет сети */
       } finally {
@@ -549,13 +549,11 @@ export function NewsGrid({ posts: initialPosts }: { posts: NewsPost[] }) {
       const known = [...posts, ...pending];
       const since = Math.max(0, ...known.map((post) => Number(post.id)));
       try {
-        const response = await fetch(`/api/feed?since=${since}`, { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as { posts: NewsPost[] };
-        if (!stopped && data.posts?.length) {
+        const fresh = await fetchLatest(since, staticMode);
+        if (!stopped && fresh.length) {
           setPending((current) => {
             const ids = new Set([...current, ...posts].map((post) => post.id));
-            return [...data.posts.filter((post) => !ids.has(post.id)), ...current];
+            return [...fresh.filter((post) => !ids.has(post.id)), ...current];
           });
         }
       } catch {

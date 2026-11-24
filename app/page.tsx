@@ -82,7 +82,7 @@ export default async function Home() {
               <img className="brand__logo" src="/brand/logo-kotel.svg" alt="Липецкий котёл — информационно-аналитический канал" width="1821" height="281" />
             </picture>
           </a>
-          <SiteSearch items={searchItems} />
+          <SiteSearch items={searchItems} staticMode={Boolean(feed.static)} />
           <div className="header-tools">
             <span className="header-date">{today}</span>
             <a className="subscribe-pill" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">
@@ -225,7 +225,7 @@ export default async function Home() {
             </p>
           </div>
           {posts.length > 0 ? (
-            <NewsGrid posts={posts} />
+            <NewsGrid posts={posts} staticMode={Boolean(feed.static)} />
           ) : (
             <div className="empty-state">
               Лента Telegram сейчас недоступна. Свежие публикации — в канале <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">@lippot</a>.

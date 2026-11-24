@@ -38,3 +38,8 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# статичная копия для хостинга (собирает GitHub Actions)
+/public/media/
+/public/data/
+/.prev/

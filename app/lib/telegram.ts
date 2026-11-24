@@ -1,5 +1,7 @@
 // Лента канала @lippot: загрузка публичной веб-версии t.me/s/lippot, разбор, склейка продолжений, рубрики, кеш.
 
+import staticFeedJson from "./static-feed.json";
+
 export const TELEGRAM_CHANNEL = "https://t.me/lippot";
 export const TELEGRAM_FEED = "https://t.me/s/lippot";
 export const VK_CHANNEL = "https://vk.ru/lipboiler2";
@@ -54,7 +56,14 @@ export type Feed = {
   live: boolean;
   completeMonth: boolean;
   fetchedAt: number;
+  /** Статичная копия для хостинга без доступа к Telegram: адрес сайта, данные готовит сборщик на GitHub. */
+  static?: { origin: string };
 };
+
+/* ---------- статичная копия ---------- */
+
+/** В обычной сборке файл пустой (null). Сборщик для хостинга кладёт в него готовую ленту с локальными фото и видео. */
+export const STATIC_FEED = staticFeedJson as unknown as Feed | null;
 
 /* ---------- медиа через сам сайт ---------- */
 
@@ -244,7 +253,7 @@ const COVERS: Record<string, string[]> = {
   "Россия и мир": ["rossiya"],
 };
 
-function coverFor(category: string, id: string) {
+export function coverFor(category: string, id: string) {
   const list = COVERS[category] ?? COVERS["Общество"];
   return `/covers/${list[Number(id) % list.length]}.webp`;
 }
@@ -515,8 +524,9 @@ async function fetchPage(before: number | null, query = "") {
   return response.text();
 }
 
-async function loadFromTelegram(): Promise<Feed> {
-  const cutoff = Date.now() - ARCHIVE_DAYS * 24 * 60 * 60 * 1000;
+/** Лента за `days` дней прямо из Telegram (сайт — за 30 дней; сборщик статичной копии берёт и архив подлиннее). */
+export async function loadFromTelegram(days = ARCHIVE_DAYS, maxRequests = MAX_REQUESTS): Promise<Feed> {
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
   const firstHtml = await fetchPage(null);
   const channel = parseChannel(firstHtml);
   const collected = new Map<number, RawPost>();
@@ -529,7 +539,7 @@ async function loadFromTelegram(): Promise<Feed> {
   let requests = 1;
   let completeMonth = oldest <= cutoff;
 
-  while (!completeMonth && before > 1 && requests < MAX_REQUESTS) {
+  while (!completeMonth && before > 1 && requests < maxRequests) {
     const batch = Array.from({ length: PARALLEL }, (_, index) => before - index * PAGE_STEP).filter((value) => value > 1);
     requests += batch.length;
     const pages = await Promise.allSettled(batch.map((value) => fetchPage(value)));
@@ -569,6 +579,7 @@ export function edgeCache(): EdgeCache | null {
 }
 
 export async function getFeed(): Promise<Feed> {
+  if (STATIC_FEED) return STATIC_FEED;
   const now = Date.now();
   if (memory && now - memory.fetchedAt < CACHE_TTL_MS) return memory;
 

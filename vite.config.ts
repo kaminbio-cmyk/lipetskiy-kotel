@@ -34,6 +34,11 @@ const localBindingConfig = {
 };
 
 export default defineConfig(async () => {
+  // Статичная копия для обычного хостинга: без Cloudflare-сервера, только HTML, JS и файлы.
+  if (process.env.LK_STATIC === "1") {
+    return { plugins: [vinext()] };
+  }
+
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   process.env.WRANGLER_WRITE_LOGS ??= "false";

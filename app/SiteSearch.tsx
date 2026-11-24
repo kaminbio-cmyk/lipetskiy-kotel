@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { NewsPost } from "./lib/telegram";
+import { searchArchive } from "./lib/archive";
 
 export type SearchItem = { id: string; title: string; category: string; date: string; text: string };
 
@@ -24,7 +25,7 @@ export function Highlight({ text, query }: { text: string; query: string }) {
 }
 
 /** Строка поиска в шапке: мгновенно — по новостям месяца, с задержкой — по всему архиву канала. */
-export function SiteSearch({ items }: { items: SearchItem[] }) {
+export function SiteSearch({ items, staticMode = false }: { items: SearchItem[]; staticMode?: boolean }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [archive, setArchive] = useState<NewsPost[]>([]);
@@ -74,9 +75,8 @@ export function SiteSearch({ items }: { items: SearchItem[] }) {
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: controller.signal });
-        const data = (await response.json()) as { posts: NewsPost[] };
-        setArchive(data.posts ?? []);
+        const found = await searchArchive(q, staticMode, controller.signal);
+        if (!controller.signal.aborted) setArchive(found);
       } catch {
         /* отменено или нет сети */
       } finally {
