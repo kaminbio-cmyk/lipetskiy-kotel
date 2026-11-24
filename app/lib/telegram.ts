@@ -12,7 +12,7 @@ const PAGE_STEP = 16; // на странице t.me/s не меньше 16 со�
 const PARALLEL = 4;
 const MAX_REQUESTS = 40;
 const CACHE_TTL_MS = 4 * 60 * 1000;
-const CACHE_KEY = "https://feed-cache.lipetskiy-kotel.local/lippot-v4";
+const CACHE_KEY = "https://feed-cache.lipetskiy-kotel.local/lippot-v5";
 
 export type Reaction = { emoji: string; count: string };
 export type Media = { src: string; ratio: number | null };
@@ -33,7 +33,10 @@ export type NewsPost = {
   viewsCount: number;
   url: string;
   images: Media[];
+  /** Первое видео публикации — для карточек. */
   video: Video | null;
+  /** Все видео публикации (альбомы бывают из нескольких роликов). */
+  videos?: Video[];
   cover: string | null;
   reactions: Reaction[];
   reactionsCount: number;
@@ -323,7 +326,7 @@ type RawPost = {
   textHtml: string;
   text: string;
   images: Media[];
-  video: Video | null;
+  videos: Video[];
   views: string;
   reactions: Reaction[];
   forwardedFrom: string | null;
@@ -375,18 +378,22 @@ function parsePage(html: string): RawPost[] {
         images.push({ src: viaSite(decodeHtml(src)), ratio: padding ? Number.parseFloat(padding) / 100 : null });
       }
 
-      const thumb = block.match(/tgme_widget_message_video_thumb"[^>]*background-image:url\('([^']+)'\)/)?.[1];
-      const duration = block.match(/<time class="message_video_duration[^"]*">([^<]+)<\/time>/)?.[1] ?? "";
-      const videoSrc = block.match(/<video src="([^"]+)"/)?.[1];
-      const videoRatio = block.match(/tgme_widget_message_video_wrap"[^>]*padding-top:([\d.]+)%/)?.[1];
-      const video: Video | null = thumb
-        ? {
-            thumb: viaSite(decodeHtml(thumb)),
-            duration,
-            src: videoSrc ? viaSite(decodeHtml(videoSrc)) : null,
-            ratio: videoRatio ? Number.parseFloat(videoRatio) / 100 : null,
-          }
-        : null;
+      // Каждый ролик (в альбоме их бывает несколько) — свой блок tgme_widget_message_video_player.
+      // У крупных роликов Telegram не даёт ссылку на файл («смотреть в Telegram») — тогда src = null.
+      const videos: Video[] = [];
+      for (const segment of block.split(/<a class="tgme_widget_message_video_player/).slice(1)) {
+        const thumb = segment.match(/tgme_widget_message_video_thumb"[^>]*background-image:url\('([^']+)'\)/)?.[1];
+        if (!thumb) continue;
+        const duration = segment.match(/<time class="message_video_duration[^"]*">([^<]+)<\/time>/)?.[1] ?? "";
+        const videoSrc = segment.match(/<video src="([^"]+)"/)?.[1];
+        const videoRatio = segment.match(/tgme_widget_message_video_wrap"[^>]*padding-top:([\d.]+)%/)?.[1];
+        videos.push({
+          thumb: viaSite(decodeHtml(thumb)),
+          duration,
+          src: videoSrc ? viaSite(decodeHtml(videoSrc)) : null,
+          ratio: videoRatio ? Number.parseFloat(videoRatio) / 100 : null,
+        });
+      }
 
       const views = plainText(block.match(/<span class="tgme_widget_message_views">([\s\S]*?)<\/span>/)?.[1] ?? "");
       const reactions: Reaction[] = [];
@@ -399,7 +406,7 @@ function parsePage(html: string): RawPost[] {
       }
       const forwardedFrom = plainText(block.match(/tgme_widget_message_forwarded_from_name"[^>]*>([\s\S]*?)<\/(?:a|span)>\s*<\/(?:span|div)>/)?.[1] ?? "") || null;
 
-      return { id, dateIso, textHtml, text, images, video, views, reactions, forwardedFrom };
+      return { id, dateIso, textHtml, text, images, videos, views, reactions, forwardedFrom };
     })
     .filter((post): post is RawPost => Boolean(post));
 }
@@ -447,7 +454,7 @@ function buildPosts(raw: RawPost[]): NewsPost[] {
       previous.parts.push(post);
       continue;
     }
-    if (!post.text && !post.images.length && !post.video) continue;
+    if (!post.text && !post.images.length && !post.videos.length) continue;
     groups.push({ head: post, parts: [post] });
   }
 
@@ -474,7 +481,8 @@ function buildPosts(raw: RawPost[]): NewsPost[] {
       const html = htmlParts.join('<hr class="part-break">');
 
       const images = parts.flatMap((part) => part.images);
-      const video = parts.find((part) => part.video)?.video ?? null;
+      const videos = parts.flatMap((part) => part.videos);
+      const video = videos[0] ?? null;
       const reactions = head.reactions;
       const reactionsCount = reactions.reduce((sum, item) => sum + parseViews(item.count), 0);
       const words = text.split(/\s+/).length;
@@ -495,6 +503,7 @@ function buildPosts(raw: RawPost[]): NewsPost[] {
         url: `${TELEGRAM_CHANNEL}/${head.id}`,
         images,
         video,
+        videos,
         cover: images.length || video ? null : coverFor(category, String(head.id)),
         reactions,
         reactionsCount,

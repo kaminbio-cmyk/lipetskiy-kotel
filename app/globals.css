@@ -302,6 +302,17 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 .reader__video-link { position: relative; display: block; }
 .reader__play { position: absolute; inset: 0; display: grid; place-items: center; }
 .reader__play svg { width: 76px; height: 76px; padding: 20px; border-radius: 50%; background: rgba(10, 14, 24, .6); fill: #fff; backdrop-filter: blur(6px); }
+/* несколько роликов в одной публикации — друг под другом */
+.reader__media--video > video { display: block; }
+.reader__media--video > video + video, .reader__media--video > video + a, .reader__media--video > a + video, .reader__media--video > a + a { margin-top: 10px; }
+.reader__video-note { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 9px 13px; border-radius: 12px; background: rgba(10, 14, 24, .72); color: #fff; font-size: 13px; font-weight: 600; line-height: 1.35; text-align: center; backdrop-filter: blur(6px); }
+/* ролики YouTube / VK Видео / Rutube из ссылок в тексте */
+.reader__embeds { display: grid; gap: 18px; margin: 26px 0 4px; }
+.reader__embed { margin: 0; border-radius: 18px; overflow: hidden; background: #0b0f17; box-shadow: 0 0 0 1px var(--line); transition: box-shadow .3s ease; }
+.reader__embed.is-flash { box-shadow: 0 0 0 3px var(--primary); }
+.reader__embed iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
+.reader__embed figcaption { padding: 10px 14px; color: #c9d1dd; font-size: 13px; }
+.reader__embed figcaption a { color: #8fd0ff; text-decoration: underline; text-underline-offset: 2px; }
 .reader__arrow { position: absolute; top: 50%; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .88); color: var(--ink); font-size: 28px; line-height: 1; cursor: pointer; transform: translateY(-50%); box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
 .reader__arrow--prev { left: 12px; }
 .reader__arrow--next { right: 12px; }

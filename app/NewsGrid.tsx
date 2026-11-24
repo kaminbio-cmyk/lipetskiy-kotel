@@ -5,7 +5,8 @@ import type { NewsPost } from "./lib/telegram";
 import { feedFilters, formatCount, plural } from "./lib/format";
 import { EyeIcon, TelegramIcon } from "./icons";
 import { Highlight } from "./SiteSearch";
-import { fetchLatest, searchArchive } from "./lib/archive";
+import { cachedArchivePost, fetchLatest, loadArchive, searchArchive } from "./lib/archive";
+import { embedFor, videoEmbeds } from "./lib/embeds";
 
 const PAGE_SIZE = 12;
 const POLL_MS = 90_000;
@@ -67,25 +68,34 @@ function Gallery({ post }: { post: NewsPost }) {
   const [index, setIndex] = useState(0);
   const total = post.images.length;
 
-  if (post.video) {
+  // Ролики, которые играют прямо на сайте, — первыми; «только в Telegram» — после них.
+  const all = post.videos?.length ? post.videos : post.video ? [post.video] : [];
+  const videos = [...all.filter((video) => video.src), ...all.filter((video) => !video.src)];
+  if (videos.length) {
     return (
       <div className="reader__media reader__media--video">
-        {post.video.src ? (
-          <video
-            controls
-            playsInline
-            preload="none"
-            poster={post.video.thumb}
-            src={post.video.src}
-            style={post.video.ratio ? { aspectRatio: `${1 / post.video.ratio}` } : undefined}
-          />
-        ) : (
-          <a href={post.url} target="_blank" rel="noreferrer" className="reader__video-link">
-            <img src={post.video.thumb} alt={post.title} />
-            <span className="reader__play" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" /></svg>
-            </span>
-          </a>
+        {videos.map((video, index) =>
+          video.src ? (
+            <video
+              key={video.src}
+              controls
+              playsInline
+              preload={index === 0 ? "metadata" : "none"}
+              poster={video.thumb}
+              src={video.src}
+              style={video.ratio ? { aspectRatio: `${1 / video.ratio}` } : undefined}
+              aria-label={videos.length > 1 ? `${post.title} — видео ${index + 1} из ${videos.length}` : post.title}
+            />
+          ) : (
+            // Крупные ролики Telegram отдаёт только в своём приложении — оставляем обложку со ссылкой.
+            <a key={video.thumb} href={post.url} target="_blank" rel="noreferrer" className="reader__video-link">
+              <img src={video.thumb} alt={post.title} />
+              <span className="reader__play" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+              </span>
+              <span className="reader__video-note">Это видео Telegram показывает только в своём приложении — смотреть в Telegram ↗</span>
+            </a>
+          )
         )}
         {post.images.length > 0 && <GalleryStrip images={post.images} active={-1} onPick={() => undefined} />}
       </div>
@@ -142,7 +152,8 @@ function Reader({
   onClose,
   onOpen,
   onTag,
-  canOpen,
+  resolveLink,
+  onOpenLinked,
   highlight,
 }: {
   post: NewsPost;
@@ -150,14 +161,18 @@ function Reader({
   onClose: () => void;
   onOpen: (id: string) => void;
   onTag: (tag: string) => void;
-  canOpen: (id: string) => boolean;
+  /** Публикация канала по номеру сообщения из ссылки t.me/lippot/N, если она есть на сайте. */
+  resolveLink: (id: string) => NewsPost | null;
+  onOpenLinked: (post: NewsPost) => void;
   highlight: string;
 }) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const textRef = useRef<HTMLDivElement | null>(null);
+  const embedsRef = useRef<HTMLDivElement | null>(null);
   const [notice, setNotice] = useState("");
   const [found, setFound] = useState(0);
+  const embeds = useMemo(() => videoEmbeds(post.html), [post.html]);
 
   // Подсветка искомых слов в тексте статьи и прокрутка к первому совпадению.
   useEffect(() => {
@@ -241,9 +256,20 @@ function Reader({
       return;
     }
     const target = link.getAttribute("data-post");
-    if (target && canOpen(target)) {
+    const linked = target ? resolveLink(target) : null;
+    if (linked) {
       event.preventDefault();
-      onOpen(target);
+      if (linked.id !== post.id) onOpenLinked(linked);
+      return;
+    }
+    // Ссылка на ролик YouTube / VK / Rutube — его плеер уже стоит под текстом статьи.
+    const embed = embedFor(link.getAttribute("href") ?? "");
+    const player = embed ? embedsRef.current?.querySelector<HTMLElement>(`[data-embed="${CSS.escape(embed.src)}"]`) : null;
+    if (player) {
+      event.preventDefault();
+      player.scrollIntoView({ behavior: "smooth", block: "center" });
+      player.classList.add("is-flash");
+      window.setTimeout(() => player.classList.remove("is-flash"), 1400);
     }
   }
 
@@ -277,6 +303,26 @@ function Reader({
             </div>
           )}
           <div key={`${post.id}|${highlight}`} ref={textRef} className="reader__text" onClick={onTextClick} dangerouslySetInnerHTML={{ __html: post.html }} />
+
+          {embeds.length > 0 && (
+            <div className="reader__embeds" ref={embedsRef} aria-label="Видео из публикации">
+              {embeds.map((embed) => (
+                <figure key={embed.src} className="reader__embed" data-embed={embed.src}>
+                  <iframe
+                    src={embed.src}
+                    title={`${embed.label}: ${post.title}`}
+                    loading="lazy"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                  <figcaption>
+                    Видео {embed.label} · <a href={embed.url} target="_blank" rel="noreferrer nofollow">открыть на {embed.label} ↗</a>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
 
           {post.reactions.length > 0 && (
             <div className="reader__reactions">
@@ -464,21 +510,54 @@ export function NewsGrid({ posts: initialPosts, staticMode = false }: { posts: N
     return () => window.removeEventListener("lk:local-search", onLocalSearch);
   }, [posts, searchIndex]);
 
+  // Номер сообщения может быть и «продолжением» — тогда открываем всю публикацию.
   const findPost = useCallback(
-    (id: string) => posts.find((post) => post.id === id) ?? extras.find((post) => post.id === id) ?? archive.find((post) => post.id === id) ?? null,
+    (id: string) => {
+      const match = (post: NewsPost) => post.id === id || post.parts.includes(id);
+      return posts.find(match) ?? extras.find(match) ?? archive.find(match) ?? null;
+    },
     [posts, extras, archive]
   );
 
+  const addExtra = useCallback((post: NewsPost) => {
+    setExtras((current) => (current.some((item) => item.id === post.id) ? current : [...current, post]));
+  }, []);
+
   // Открытие статьи по адресу #post-12345 (ссылки с главной, из подборок, присланные друзьям).
+  // В статичной копии старые публикации (до 90 дней) берём из архива.
   useEffect(() => {
+    let cancelled = false;
     const sync = () => {
       const id = window.location.hash.match(/^#post-(\d+)$/)?.[1] ?? null;
-      setOpenId(id && findPost(id) ? id : null);
+      const post = id ? findPost(id) : null;
+      setOpenId(post ? post.id : null);
+      if (id && !post && staticMode) {
+        void loadArchive().then(() => {
+          const old = cachedArchivePost(id);
+          if (!cancelled && old && window.location.hash === `#post-${id}`) {
+            addExtra(old);
+            setOpenId(old.id);
+          }
+        });
+      }
     };
     sync();
     window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
-  }, [findPost]);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("hashchange", sync);
+    };
+  }, [findPost, staticMode, addExtra]);
+
+  // Пока открыта статья, подгружаем архив: ссылки из текста на старые публикации канала откроются на сайте.
+  useEffect(() => {
+    if (staticMode && openId) void loadArchive();
+  }, [staticMode, openId]);
+
+  const resolveLink = useCallback(
+    (id: string) => findPost(id) ?? (staticMode ? cachedArchivePost(id) : null),
+    [findPost, staticMode]
+  );
 
   // Поиск по всему архиву канала — когда в ленте задан запрос.
   useEffect(() => {
@@ -693,7 +772,11 @@ export function NewsGrid({ posts: initialPosts, staticMode = false }: { posts: N
           onClose={closePost}
           onOpen={openPost}
           highlight={highlight}
-          canOpen={(id) => Boolean(findPost(id))}
+          resolveLink={resolveLink}
+          onOpenLinked={(linked) => {
+            if (!findPost(linked.id)) addExtra(linked);
+            openPost(linked.id);
+          }}
           onTag={(tag) => {
             closePost();
             chooseFilter(tag);

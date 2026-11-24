@@ -1,5 +1,6 @@
 // Сборщик статичной копии «Липецкого котла» для хостинга без доступа к Telegram (SpaceWeb).
-// Берёт ленту @lippot за 30 дней и архив за 90 дней, скачивает фото и видео к себе, готовит файлы данных.
+// Берёт ленту @lippot за 30 дней и архив за 90 дней, скачивает к себе фото и все ролики (и ленты, и архива), готовит файлы данных.
+// Ролики, которые Telegram отдаёт только в своём приложении, и файлы больше 95 МБ остаются ссылкой на Telegram.
 //
 //   node tools/build-static-feed.mts --out public --prev <папка прошлой сборки>
 //
@@ -25,7 +26,7 @@ const PREV = arg("prev") ? path.resolve(arg("prev")) : "";
 const ORIGIN = process.env.LK_SITE_ORIGIN || "https://lk48.ru";
 const FEED_DAYS = 30;
 const ARCHIVE_DAYS = 90;
-const MAX_VIDEO_BYTES = 45 * 1024 * 1024; // крупнее — оставляем ссылку на Telegram (GitHub не любит файлы больше 50 МБ)
+const MAX_VIDEO_BYTES = 95 * 1024 * 1024; // крупнее — оставляем ссылку на Telegram (GitHub не принимает файлы больше 100 МБ)
 
 // telegram.ts импортирует static-feed.json без атрибутов импорта — Node так не умеет. Берём копию модуля без этой строки.
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "lk-feed-"));
@@ -39,9 +40,10 @@ const tg = await import(pathToFileURL(tmpModule).href);
 type Media = { src: string; ratio: number | null };
 type Post = {
   id: string; title: string; excerpt: string; html: string; category: string; tags: string[];
-  images: Media[]; video: { thumb: string; duration: string; src: string | null; ratio: number | null } | null;
+  images: Media[]; video: Video | null; videos?: Video[];
   cover: string | null; dateIso: string; [key: string]: unknown;
 };
+type Video = { thumb: string; duration: string; src: string | null; ratio: number | null };
 
 const mediaDir = path.join(OUT, "media");
 const dataDir = path.join(OUT, "data");
@@ -58,7 +60,7 @@ const extOf = (type: string, fallback: string) =>
   /png/.test(type) ? ".png" : /webp/.test(type) ? ".webp" : /gif/.test(type) ? ".gif" : /mp4|video/.test(type) ? ".mp4" : /jpe?g|image/.test(type) ? ".jpg" : fallback;
 
 const used = new Set<string>();
-let downloaded = 0, reused = 0, skippedVideos = 0, failed = 0;
+let downloaded = 0, reused = 0, skippedVideos = 0, failed = 0, noLocalVideo = 0, telegramOnly = 0;
 
 /** Скачать файл под постоянным именем (или взять из прошлой сборки). Возвращает адрес /media/... или null. */
 async function fetchMedia(url: string, base: string, fallbackExt: string, maxBytes = 25 * 1024 * 1024): Promise<string | null> {
@@ -95,18 +97,22 @@ async function localize(post: Post) {
     if (local) images.push({ ...post.images[i], src: local });
   }
   post.images = images;
-  if (post.video) {
-    const thumb = await fetchMedia(post.video.thumb, `${post.id}-vt`, ".jpg");
-    const video = post.video.src ? await fetchMedia(post.video.src, `${post.id}-v`, ".mp4", MAX_VIDEO_BYTES) : null;
-    post.video = thumb ? { ...post.video, thumb, src: video } : null;
+  // Все ролики публикации: первый под прежними именами (<id>-vt.jpg, <id>-v.mp4), следующие — <id>-v2t.jpg, <id>-v2.mp4 …
+  const source = post.videos?.length ? post.videos : post.video ? [post.video] : [];
+  const videos: Video[] = [];
+  for (let i = 0; i < source.length; i++) {
+    const tag = i === 0 ? "v" : `v${i + 1}`;
+    const thumb = await fetchMedia(source[i].thumb, `${post.id}-${tag}t`, ".jpg");
+    if (!thumb) continue;
+    const video = source[i].src ? await fetchMedia(source[i].src!, `${post.id}-${tag}`, ".mp4", MAX_VIDEO_BYTES) : null;
+    if (source[i].src && !video) noLocalVideo++;
+    if (!source[i].src) telegramOnly++;
+    videos.push({ ...source[i], thumb, src: video });
   }
+  post.videos = videos;
+  post.video = videos[0] ?? null;
   if (!post.images.length && !post.video && !post.cover) post.cover = tg.coverFor(post.category, post.id);
   return post;
-}
-
-/** Старые посты архива — без тяжёлых медиа: обложка рубрики вместо фото. */
-function lighten(post: Post) {
-  return { ...post, images: [], video: null, cover: post.cover ?? tg.coverFor(post.category, post.id) };
 }
 
 const started = Date.now();
@@ -118,6 +124,9 @@ const older = (archiveFeed.posts as Post[]).filter((post) => new Date(post.dateI
 
 const localized: Post[] = [];
 for (const post of recent) localized.push(await localize(structuredClone(post)));
+// Архив (31–90 дней) — тоже с фото и видео: его открывают из поиска и по ссылкам внутри статей.
+const olderLocalized: Post[] = [];
+for (const post of older) olderLocalized.push(await localize(structuredClone(post)));
 
 const feed = {
   ...archiveFeed,
@@ -127,7 +136,7 @@ const feed = {
 };
 fs.writeFileSync(path.join(ROOT, "app/lib/static-feed.json"), JSON.stringify(feed));
 fs.writeFileSync(path.join(dataDir, "latest.json"), JSON.stringify({ posts: localized.slice(0, 24), fetchedAt: feed.fetchedAt }));
-fs.writeFileSync(path.join(dataDir, "archive.json"), JSON.stringify({ posts: [...localized, ...older.map(lighten)], fetchedAt: feed.fetchedAt }));
+fs.writeFileSync(path.join(dataDir, "archive.json"), JSON.stringify({ posts: [...localized, ...olderLocalized], fetchedAt: feed.fetchedAt }));
 
 // Убрать файлы постов, ушедших из ленты.
 let removed = 0;
@@ -137,14 +146,15 @@ for (const name of fs.readdirSync(mediaDir)) if (!used.has(name)) { fs.rmSync(pa
 const fingerprint = crypto
   .createHash("sha1")
   .update(JSON.stringify({ ...feed, fetchedAt: 0 }))
-  .update(JSON.stringify(older.map((post) => post.id)))
+  .update(JSON.stringify(olderLocalized.map((post) => [post.id, post.images.length, (post.videos ?? []).map((video) => video.src)])))
   .digest("hex");
 fs.writeFileSync(path.join(dataDir, "feed-hash.txt"), fingerprint + "\n");
 
-const videos = localized.filter((post) => post.video?.src).length;
+const videos = [...localized, ...olderLocalized].reduce((sum, post) => sum + (post.videos ?? []).filter((video) => video.src).length, 0);
 console.log(
   `Лента: ${localized.length} постов за ${FEED_DAYS} дн., архив: ${older.length} старше; ` +
-  `видео на хостинге: ${videos}, слишком крупных: ${skippedVideos}; файлов скачано ${downloaded}, взято из прошлой сборки ${reused}, ` +
+  `роликов на хостинге: ${videos}, только в Telegram: ${telegramOnly}, слишком крупных или не скачалось: ${noLocalVideo} (крупных ${skippedVideos}); ` +
+  `файлов скачано ${downloaded}, взято из прошлой сборки ${reused}, ` +
   `не скачалось ${failed}, удалено ${removed}; ${Math.round((Date.now() - started) / 1000)} с; отпечаток ${fingerprint.slice(0, 12)}`
 );
 fs.rmSync(tmpDir, { recursive: true, force: true });

@@ -20,7 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     env:
       LK_SITE_ORIGIN: ${{ vars.LK_SITE_ORIGIN || 'https://lk48.ru' }}
     steps:

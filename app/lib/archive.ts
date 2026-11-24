@@ -2,9 +2,27 @@
 import type { NewsPost } from "./telegram";
 
 let archivePromise: Promise<NewsPost[]> | null = null;
+let archiveLoaded: NewsPost[] | null = null;
 
 function plain(post: NewsPost) {
   return `${post.title} ${post.excerpt} ${post.tags.join(" ")} ${post.html.replace(/<[^>]+>/g, " ")}`.toLowerCase();
+}
+
+/** Архив за 90 дней статичной копии (/data/archive.json) — грузится один раз на страницу. */
+export function loadArchive(): Promise<NewsPost[]> {
+  archivePromise ??= fetch("/data/archive.json", { cache: "no-cache" })
+    .then((response) => response.json())
+    .then((data: { posts?: NewsPost[] }) => (archiveLoaded = data.posts ?? []))
+    .catch(() => {
+      archivePromise = null;
+      return [];
+    });
+  return archivePromise;
+}
+
+/** Публикация (или её «продолжение») по номеру сообщения — из уже загруженного архива, без ожидания. */
+export function cachedArchivePost(id: string): NewsPost | null {
+  return archiveLoaded?.find((post) => post.id === id || post.parts.includes(id)) ?? null;
 }
 
 /** Поиск по архиву канала. */
@@ -14,14 +32,7 @@ export async function searchArchive(query: string, staticMode: boolean, signal?:
     const data = (await response.json()) as { posts?: NewsPost[] };
     return data.posts ?? [];
   }
-  archivePromise ??= fetch("/data/archive.json", { cache: "no-cache" })
-    .then((response) => response.json())
-    .then((data: { posts?: NewsPost[] }) => data.posts ?? [])
-    .catch(() => {
-      archivePromise = null;
-      return [];
-    });
-  const all = await archivePromise;
+  const all = await loadArchive();
   if (signal?.aborted) return [];
   const words = query.toLowerCase().split(/\s+/).filter((word) => word.length > 1);
   if (!words.length) return [];
