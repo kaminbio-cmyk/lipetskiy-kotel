@@ -49,7 +49,7 @@ if [ -f "$KICK_KEY" ]; then
          cd "$KICK_DIR" || exit 1
          git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD || exit 1
          git -c user.name="lk48 watchdog" -c user.email="watchdog@lk48.ru" commit -q --allow-empty -m "Сторож lk48.ru: перезапуск сборки" || exit 1
-         git push -q -f origin HEAD:refs/heads/watchdog-kick ); then
+         git push -q -f origin HEAD:refs/heads/watchdog-kick >/dev/null 2>&1 ); then
       RESULT="запущена"
     fi
     echo "$(date '+%F %T') сторож: новой сборки нет $((AGE / 60)) мин — сборка $RESULT"
