@@ -110,8 +110,8 @@ export function ReadsToday({ initial }: { initial: Reads }) {
 
   return (
     <div className="reads-today shell" aria-live="polite">
-      <span className="reads-today__dot" aria-hidden="true" />
       <span className="reads-today__text">
+        <span className="reads-today__dot" aria-hidden="true" />
         Сегодня новости «Липецкого котла» прочитали <b>{format(value)}</b> {plural(value, "раз", "раза", "раз")}
       </span>
       <small className="reads-today__parts" title="С 00:00 по Москве">{parts.join(" · ")}</small>
