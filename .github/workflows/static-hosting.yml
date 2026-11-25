@@ -1,6 +1,11 @@
 # Статичная копия «Липецкого котла» для обычного хостинга (SpaceWeb, https://lk48.ru), откуда Telegram недоступен.
-# Каждые 15 минут: забрать ленту @lippot, фото и видео, собрать сайт и выложить в ветку `site`.
-# Хостинг сам забирает ветку `site` (скрипт tools/hosting-sync.sh по расписанию cron).
+# Каждые ~10 минут: забрать ленту @lippot, фото и видео, собрать сайт и выложить в ветку `site`.
+# Хостинг сам забирает ветку `site` (скрипт tools/hosting-sync.sh по расписанию cron, каждые 10 минут).
+#
+# Расписанию GitHub (schedule) верить нельзя: в этом хранилище 24–25.11.2026 оно не сработало ни разу за 7 часов,
+# и новые посты канала не попадали на сайт. Поэтому каждый запуск сам заводит следующий:
+# задание `next` ждёт 9 минут в окружении `next-run` (таймер окружения, машина GitHub при этом не занята)
+# и запускает сборку снова. schedule оставлен запасным — если цепочка когда-нибудь оборвётся, он её поднимет.
 name: Static copy for hosting
 
 on:
@@ -12,15 +17,15 @@ on:
 
 permissions:
   contents: write
-
-concurrency:
-  group: static-site
-  cancel-in-progress: false
+  actions: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    concurrency:
+      group: static-site
+      cancel-in-progress: false
     env:
       LK_SITE_ORIGIN: ${{ vars.LK_SITE_ORIGIN || 'https://lk48.ru' }}
     steps:
@@ -68,8 +73,30 @@ jobs:
           git config user.email "lk-static-bot@users.noreply.github.com"
           git add -A
           git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
-          # раз в ~2 месяца начинаем ветку заново, чтобы история фото и видео не разрасталась
+          # раз в несколько недель начинаем ветку заново, чтобы история фото и видео не разрасталась
           if [ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" -gt 3000 ]; then
             git checkout -q --orphan fresh && git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ) (новая история)"
           fi
           git push -f origin HEAD:refs/heads/site
+
+  # Следующий запуск через ~10 минут. Таймер ожидания (9 мин) задан у окружения next-run в настройках хранилища.
+  next:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: next-run
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Start the next run
+        run: |
+          # Продолжает цепочку только самый новый запуск — так цепочка всегда одна, сколько бы запусков ни было.
+          newer=$(gh run list -R "$GITHUB_REPOSITORY" --workflow static-hosting.yml -L 30 --json databaseId \
+            --jq "[.[] | select(.databaseId > ${GITHUB_RUN_ID})] | length")
+          if [ "$newer" = "0" ]; then
+            gh workflow run static-hosting.yml -R "$GITHUB_REPOSITORY" --ref main
+            echo "Следующая сборка запущена"
+          else
+            echo "Есть более новый запуск ($newer) — он продолжит цепочку"
+          fi
