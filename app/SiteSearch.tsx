@@ -187,10 +187,8 @@ export function SiteSearch({ items, staticMode = false }: { items: SearchItem[];
           }}
           onKeyDown={onKeyDown}
         />
-        {query ? (
+        {query && (
           <button type="button" className="site-search__clear" onClick={() => { setQuery(""); inputRef.current?.focus(); }} aria-label="Очистить поиск">×</button>
-        ) : (
-          <kbd aria-hidden="true">/</kbd>
         )}
       </label>
 
