@@ -13,7 +13,8 @@ on:
     - cron: "*/15 * * * *"
   workflow_dispatch:
   push:
-    branches: [main]
+    # watchdog-kick — сигнал сторожа с хостинга (пустой коммит поверх main), см. tools/hosting-sync.sh
+    branches: [main, watchdog-kick]
 
 permissions:
   contents: write

@@ -27,23 +27,31 @@ cd "$SRC" || exit 1
 REV="$(git rev-parse HEAD)"
 
 # Сторож. Сборки на GitHub идут цепочкой (каждая запускает следующую через ~10 минут). Если цепочка оборвалась
-# (сбой GitHub дольше 6 часов и т. п.), новой сборки нет — тогда хостинг сам запускает её через API GitHub.
-# Нужен ключ ~/.kotel-gh-token: fine-grained token GitHub только для этого хранилища, право Actions: Read and write.
-# Без ключа сторож молчит. Запускает не чаще раза в 30 минут; лишний запуск цепочке не вредит (её продолжает самый новый).
-TOKEN_FILE="$HOME/.kotel-gh-token"
+# (сбой GitHub дольше 6 часов и т. п.), новой сборки нет — тогда хостинг сам запускает её: кладёт пустой коммит
+# поверх main в ветку watchdog-kick, а на push в неё сборка запускается сама.
+# Ключ ~/.ssh/lk48_github_kick создан на этом сервере и его не покидает; в GitHub — deploy key «lk48.ru watchdog»
+# с правом записи, а правило хранилища «main: только владелец» не пускает его в main.
+# Запускает не чаще раза в 30 минут; лишний запуск цепочке не вредит (её продолжает самый новый запуск).
+# KOTEL_KICK_NOW=1 — проверить сторожа сразу, не дожидаясь 40 минут.
+KICK_KEY="$HOME/.ssh/lk48_github_kick"
+KICK_DIR="$HOME/.kotel-kick"
 WATCH_STAMP="$HOME/.kotel-watchdog.last"
-if [ -s "$TOKEN_FILE" ]; then
+if [ -f "$KICK_KEY" ]; then
   NOW=$(date +%s)
   AGE=$(( NOW - $(git log -1 --format=%ct 2>/dev/null || echo "$NOW") ))
   LAST=$(cat "$WATCH_STAMP" 2>/dev/null || echo 0)
-  if [ "$AGE" -gt 2400 ] && [ $(( NOW - LAST )) -gt 1800 ]; then
+  if { [ "$AGE" -gt 2400 ] && [ $(( NOW - LAST )) -gt 1800 ]; } || [ "${KOTEL_KICK_NOW:-}" = "1" ]; then
     echo "$NOW" > "$WATCH_STAMP"
-    CODE=$(curl -s -o /dev/null -w '%{http_code}' -m 30 -X POST \
-      -H "Authorization: Bearer $(tr -d ' \r\n' < "$TOKEN_FILE")" \
-      -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/repos/kaminbio-cmyk/lipetskiy-kotel/actions/workflows/static-hosting.yml/dispatches" \
-      -d '{"ref":"main"}')
-    echo "$(date '+%F %T') сторож: новой сборки нет $((AGE / 60)) мин — запуск на GitHub, ответ $CODE"
+    RESULT="не удалось"
+    if ( export GIT_SSH_COMMAND="ssh -i $KICK_KEY -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+         [ -d "$KICK_DIR/.git" ] || git clone -q --depth 1 -b main "git@github.com:kaminbio-cmyk/lipetskiy-kotel.git" "$KICK_DIR" || exit 1
+         cd "$KICK_DIR" || exit 1
+         git fetch -q --depth 1 origin main && git reset -q --hard FETCH_HEAD || exit 1
+         git -c user.name="lk48 watchdog" -c user.email="watchdog@lk48.ru" commit -q --allow-empty -m "Сторож lk48.ru: перезапуск сборки" || exit 1
+         git push -q -f origin HEAD:refs/heads/watchdog-kick ); then
+      RESULT="запущена"
+    fi
+    echo "$(date '+%F %T') сторож: новой сборки нет $((AGE / 60)) мин — сборка $RESULT"
   fi
 fi
 
