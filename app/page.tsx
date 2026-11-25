@@ -119,10 +119,9 @@ export default async function Home() {
               ))}
             </div>
           </div>
+          {feed.reads && <ReadsToday initial={feed.reads} />}
         </div>
       )}
-
-      {feed.reads && <ReadsToday initial={feed.reads} />}
 
       <main>
         <section className="front shell" aria-label="Главные новости">

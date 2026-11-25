@@ -106,15 +106,16 @@ export function ReadsToday({ initial }: { initial: Reads }) {
 
   const value = Math.round(shown || total);
   if (!value) return null;
-  const parts = [`Telegram ${format(telegram)}`, reads.vk !== null ? `ВКонтакте ${format(vk)}` : "", site ? `сайт ${format(site)}` : ""].filter(Boolean);
 
+  // Компактно, в правом конце тёмной полосы «Лента»: на широком экране — полная фраза, на узком — короче.
   return (
-    <div className="reads-today shell" aria-live="polite">
-      <span className="reads-today__text">
-        <span className="reads-today__dot" aria-hidden="true" />
-        Сегодня новости «Липецкого котла» прочитали <b>{format(value)}</b> {plural(value, "раз", "раза", "раз")}
-      </span>
-      <small className="reads-today__parts" title="С 00:00 по Москве">{parts.join(" · ")}</small>
-    </div>
+    <span className="ticker__reads" aria-live="polite" title="С 00:00 по Москве">
+      <i aria-hidden="true" />
+      <span className="ticker__reads-long">Сегодня новости «Липецкого котла» прочитали</span>
+      <span className="ticker__reads-mid">Сегодня прочитали</span>
+      <span className="ticker__reads-short">Прочитали</span>
+      <b>{format(value)}</b>
+      {plural(value, "раз", "раза", "раз")}
+    </span>
   );
 }

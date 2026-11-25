@@ -153,12 +153,13 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 .ticker:hover .ticker__move { animation-play-state: paused; }
 .ticker__move a { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap; }
 .ticker__move a:hover { color: #7fd0ff; }
-/* «Сегодня новости прочитали N раз» — под лентой */
-.reads-today { width: fit-content; max-width: min(1240px, calc(100% - 40px)); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 18px; padding: 9px 20px; border: 1px solid var(--ios-hairline); border-radius: 999px; background: #fff; box-shadow: var(--shadow); color: #3b4250; font-size: 14px; font-weight: 600; line-height: 1.35; text-align: center; }
-.reads-today b { color: var(--fire-2); font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
-.reads-today__dot { display: inline-block; width: 8px; height: 8px; margin-right: 9px; vertical-align: 2px; border-radius: 50%; background: #3ddc84; animation: pulse-green 1.8s infinite; }
-.reads-today__parts { color: #8a919c; font-size: 12px; font-weight: 600; }
-.reads-today + main .front { padding-top: 18px; }
+/* «Сегодня новости прочитали N раз» — компактно, в правом конце полосы «Лента» */
+.ticker__reads { height: 100%; display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 0 max(20px, calc((100vw - 1240px) / 2)) 0 18px; background: var(--night); color: #cfd6e2; font-size: 12px; font-weight: 650; white-space: nowrap; position: relative; z-index: 1; box-shadow: -14px 0 18px var(--night); }
+.ticker__reads i { width: 7px; height: 7px; margin-right: 2px; border-radius: 50%; background: #3ddc84; animation: pulse-green 1.8s infinite; }
+.ticker__reads b { color: #ff8a4c; font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.ticker__reads-mid, .ticker__reads-short { display: none; }
+@media (max-width: 1240px) { .ticker__reads-long { display: none; } .ticker__reads-mid { display: inline; } }
+@media (max-width: 560px) { .ticker__reads-mid { display: none; } .ticker__reads-short { display: inline; } .ticker__reads { padding-left: 12px; padding-right: 10px; gap: 5px; } }
 .ticker__move time { color: #ff9b63; font-size: 12px; font-weight: 800; }
 @keyframes ticker { to { transform: translateX(-50%); } }
 
@@ -486,9 +487,6 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 
 @media (max-width: 520px) {
   .shell { width: calc(100% - 20px); }
-  .reads-today { flex-direction: column; gap: 2px; margin-top: 12px; padding: 8px 14px; border-radius: 16px; font-size: 13px; }
-  .reads-today b { font-size: 15px; }
-  .reads-today + main .front { padding-top: 12px; }
   .site-header__main { min-height: 66px; gap: 10px 8px; padding-top: 10px; }
   .brand__logo { height: 24px; }
   .header-tools { gap: 5px; }
