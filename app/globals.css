@@ -153,6 +153,12 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 .ticker:hover .ticker__move { animation-play-state: paused; }
 .ticker__move a { display: inline-flex; align-items: center; gap: 9px; white-space: nowrap; }
 .ticker__move a:hover { color: #7fd0ff; }
+/* «Сегодня новости прочитали N раз» — под лентой */
+.reads-today { width: fit-content; max-width: min(1240px, calc(100% - 40px)); display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 10px; margin-top: 18px; padding: 9px 20px; border: 1px solid var(--ios-hairline); border-radius: 999px; background: #fff; box-shadow: var(--shadow); color: #3b4250; font-size: 14px; font-weight: 600; line-height: 1.35; text-align: center; }
+.reads-today b { color: var(--fire-2); font-size: 17px; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.reads-today__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; animation: pulse-green 1.8s infinite; }
+.reads-today__parts { color: #8a919c; font-size: 12px; font-weight: 600; }
+.reads-today + main .front { padding-top: 18px; }
 .ticker__move time { color: #ff9b63; font-size: 12px; font-weight: 800; }
 @keyframes ticker { to { transform: translateX(-50%); } }
 
@@ -480,6 +486,9 @@ mark { padding: 0 2px; border-radius: 4px; background: #ffe1a6; color: inherit; 
 
 @media (max-width: 520px) {
   .shell { width: calc(100% - 20px); }
+  .reads-today { margin-top: 12px; padding: 8px 14px; border-radius: 16px; font-size: 13px; }
+  .reads-today b { font-size: 15px; }
+  .reads-today + main .front { padding-top: 12px; }
   .site-header__main { min-height: 66px; gap: 10px 8px; padding-top: 10px; }
   .brand__logo { height: 24px; }
   .header-tools { gap: 5px; }

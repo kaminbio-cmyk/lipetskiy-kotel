@@ -60,6 +60,8 @@ export type Feed = {
   fetchedAt: number;
   /** Статичная копия для хостинга без доступа к Telegram: адрес сайта, данные готовит сборщик на GitHub. */
   static?: { origin: string };
+  /** Прочтения за сегодня (с 00:00 по Москве) — считает сборщик статичной копии: прирост просмотров постов. */
+  reads?: { date: string; telegram: number; vk: number | null; updatedAt: number };
 };
 
 /* ---------- статичная копия ---------- */

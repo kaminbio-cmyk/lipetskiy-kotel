@@ -128,14 +128,59 @@ for (const post of recent) localized.push(await localize(structuredClone(post)))
 const olderLocalized: Post[] = [];
 for (const post of older) olderLocalized.push(await localize(structuredClone(post)));
 
+// «Сегодня прочитали»: насколько выросли просмотры постов с 00:00 по Москве.
+// Снимок просмотров на начало суток лежит в data/views-baseline.json и переносится из сборки в сборку;
+// в первой сборке новых суток снимок делается заново (для 25.11.2026 — из tools/seed, снимок 24.11 23:50).
+type Baseline = { date: string; views: Record<string, number>; vk?: Record<string, number> };
+const mskDate = (time = Date.now()) => new Date(time + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+const today = mskDate();
+const readJson = <T,>(file: string): T | null => {
+  try { return JSON.parse(fs.readFileSync(file, "utf8")) as T; } catch { return null; }
+};
+const viewsNow: Record<string, number> = Object.fromEntries(
+  [...localized, ...olderLocalized].map((post) => [post.id, Number(post.viewsCount) || 0])
+);
+// ВКонтакте: просмотры записей сообщества — только если в GitHub задан секрет VK_TOKEN (сервисный ключ приложения VK).
+async function vkViews(): Promise<Record<string, number> | null> {
+  const token = process.env.VK_TOKEN;
+  if (!token) return null;
+  try {
+    const body = new URLSearchParams({ domain: "lipboiler2", count: "100", v: "5.199", access_token: token });
+    const response = await fetch("https://api.vk.com/method/wall.get", { method: "POST", body, signal: AbortSignal.timeout(30_000) });
+    const data = (await response.json()) as { response?: { items: Array<{ id: number; views?: { count: number } }> }; error?: { error_msg: string } };
+    if (!data.response) { console.log(`ВКонтакте не ответил: ${data.error?.error_msg ?? response.status}`); return null; }
+    return Object.fromEntries(data.response.items.map((item) => [String(item.id), item.views?.count ?? 0]));
+  } catch (error) {
+    console.log(`ВКонтакте недоступен: ${(error as Error).message}`);
+    return null;
+  }
+}
+const vkNow = await vkViews();
+let baseline = readJson<Baseline>(PREV ? path.join(PREV, "data", "views-baseline.json") : "");
+if (!baseline || baseline.date !== today) {
+  const seed = readJson<Baseline>(path.join(ROOT, "tools/seed/views-baseline.json"));
+  baseline = seed && seed.date === today ? seed : { date: today, views: viewsNow };
+}
+if (vkNow && !baseline.vk) baseline.vk = vkNow;
+const grown = (now: Record<string, number>, base: Record<string, number> = {}) =>
+  Object.entries(now).reduce((sum, [id, value]) => sum + Math.max(0, value - (base[id] ?? 0)), 0);
+const reads = {
+  date: today,
+  telegram: grown(viewsNow, baseline.views),
+  vk: vkNow ? grown(vkNow, baseline.vk) : null,
+  updatedAt: Date.now(),
+};
+fs.writeFileSync(path.join(dataDir, "views-baseline.json"), JSON.stringify(baseline));
+
 const feed = {
   ...archiveFeed,
   posts: localized,
   completeMonth: true,
   static: { origin: ORIGIN.replace(/\/$/, "") },
+  reads,
 };
 fs.writeFileSync(path.join(ROOT, "app/lib/static-feed.json"), JSON.stringify(feed));
-fs.writeFileSync(path.join(dataDir, "latest.json"), JSON.stringify({ posts: localized.slice(0, 24), fetchedAt: feed.fetchedAt }));
+fs.writeFileSync(path.join(dataDir, "latest.json"), JSON.stringify({ posts: localized.slice(0, 24), fetchedAt: feed.fetchedAt, reads }));
 fs.writeFileSync(path.join(dataDir, "archive.json"), JSON.stringify({ posts: [...localized, ...olderLocalized], fetchedAt: feed.fetchedAt }));
 
 // Убрать файлы постов, ушедших из ленты.
@@ -155,6 +200,7 @@ console.log(
   `Лента: ${localized.length} постов за ${FEED_DAYS} дн., архив: ${older.length} старше; ` +
   `роликов на хостинге: ${videos}, только в Telegram: ${telegramOnly}, слишком крупных или не скачалось: ${noLocalVideo} (крупных ${skippedVideos}); ` +
   `файлов скачано ${downloaded}, взято из прошлой сборки ${reused}, ` +
-  `не скачалось ${failed}, удалено ${removed}; ${Math.round((Date.now() - started) / 1000)} с; отпечаток ${fingerprint.slice(0, 12)}`
+  `не скачалось ${failed}, удалено ${removed}; сегодня прочитали: Telegram ${reads.telegram}${reads.vk === null ? "" : `, ВКонтакте ${reads.vk}`}; ` +
+  `${Math.round((Date.now() - started) / 1000)} с; отпечаток ${fingerprint.slice(0, 12)}`
 );
 fs.rmSync(tmpDir, { recursive: true, force: true });

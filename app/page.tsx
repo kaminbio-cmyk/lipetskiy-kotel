@@ -2,6 +2,7 @@ import { BriefTabs, type BriefItem } from "./BriefTabs";
 import { BriefFill } from "./BriefFill";
 import { CategoryNav } from "./CategoryNav";
 import { NewsGrid } from "./NewsGrid";
+import { ReadsToday } from "./ReadsToday";
 import { FilterLink, ToTopLink, TopicChips } from "./TopicChips";
 import { SiteSearch, type SearchItem } from "./SiteSearch";
 import { EyeIcon, TelegramIcon } from "./icons";
@@ -120,6 +121,8 @@ export default async function Home() {
           </div>
         </div>
       )}
+
+      {feed.reads && <ReadsToday initial={feed.reads} />}
 
       <main>
         <section className="front shell" aria-label="Главные новости">

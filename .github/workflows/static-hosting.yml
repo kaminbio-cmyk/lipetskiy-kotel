@@ -28,6 +28,7 @@ jobs:
       cancel-in-progress: false
     env:
       LK_SITE_ORIGIN: ${{ vars.LK_SITE_ORIGIN || 'https://lk48.ru' }}
+      VK_TOKEN: ${{ secrets.VK_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
