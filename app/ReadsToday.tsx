@@ -24,7 +24,7 @@ function hit(key: string) {
   } catch {
     /* приватный режим — считаем без отметки */
   }
-  return fetch("/stat/hit.php", { method: "POST", keepalive: true }).then((response) => response.ok).catch(() => false);
+  return fetch("/stat/hit.php", { method: "POST", cache: "no-store" }).then((response) => response.ok).catch(() => false);
 }
 
 export function ReadsToday({ initial }: { initial: Reads }) {
