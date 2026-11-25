@@ -67,16 +67,25 @@ jobs:
       - name: Publish to branch site
         if: steps.check.outputs.changed == 'true'
         run: |
+          # Раз в сутки начинаем ветку заново: каждая сборка добавляет ~1 МБ данных, и история за недели разрослась бы
+          # до гигабайтов — у GitHub это уже повод ограничить хранилище. Считать сборки нельзя: здесь видна только
+          # последняя версия ветки (fetch --depth 1), поэтому день начала истории хранится в файле .history-day.
+          # Хостинг новую историю переживает (fetch --depth 1 + reset), уже лежащие на GitHub файлы второй раз не грузятся.
+          day_before="$(cat .prev/.history-day 2>/dev/null || true)"
+          today="$(date -u +%F)"
           echo "${{ steps.check.outputs.info }}" > dist/client/.build-info
+          echo "$today" > dist/client/.history-day
           rsync -a --delete --exclude .git dist/client/ .prev/
           cd .prev
           git config user.name "lk-static-bot"
           git config user.email "lk-static-bot@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
-          # раз в несколько недель начинаем ветку заново, чтобы история фото и видео не разрасталась
-          if [ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" -gt 3000 ]; then
-            git checkout -q --orphan fresh && git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ) (новая история)"
+          if [ "$day_before" != "$today" ]; then
+            git checkout -q --orphan "history-$today"
+            git add -A
+            git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ) (история с $today)"
+          else
+            git add -A
+            git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
           fi
           # GitHub иногда отвечает ошибкой 500 (так было 25.11.2026 в 15:49Z) — повторяем выкладку
           for attempt in 1 2 3 4 5; do
