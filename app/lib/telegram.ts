@@ -5,7 +5,6 @@ import staticFeedJson from "./static-feed.json";
 export const TELEGRAM_CHANNEL = "https://t.me/lippot";
 export const TELEGRAM_FEED = "https://t.me/s/lippot";
 export const VK_CHANNEL = "https://vk.ru/lipboiler2";
-export const EDITOR_EMAIL = "lipport@protonmail.com";
 
 const ARCHIVE_DAYS = 30;
 const PAGE_STEP = 16; // на странице t.me/s не меньше 16 сообщений, значит шаг в 16 номеров не даёт пропусков
@@ -416,7 +415,7 @@ function parseChannel(html: string): ChannelInfo {
     html.match(new RegExp(`<span class="counter_value">([^<]+)</span>\\s*<span class="counter_type">${type}`))?.[1] ?? "";
   return {
     title: plainText(html.match(/tgme_channel_info_header_title"><span dir="auto">([\s\S]*?)<\/span>/)?.[1] ?? "") || "Липецкий котел",
-    description: plainText(html.match(/tgme_channel_info_description">([\s\S]*?)<\/div>/)?.[1] ?? "").replace(/\s*\S+@\S+\s*$/, ""),
+    description: plainText(html.match(/tgme_channel_info_description">([\s\S]*?)<\/div>/)?.[1] ?? "").replace(/\s*[\w.+-]+@[\w-]+(?:\.[\w-]+)+\s*/g, " ").trim() /* адрес почты из описания канала на сайте не показываем */,
     subscribers: counter("subscribers"),
     photos: counter("photos"),
     videos: counter("videos"),

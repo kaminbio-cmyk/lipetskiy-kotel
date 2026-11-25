@@ -5,7 +5,7 @@ import { NewsGrid } from "./NewsGrid";
 import { FilterLink, ToTopLink, TopicChips } from "./TopicChips";
 import { SiteSearch, type SearchItem } from "./SiteSearch";
 import { EyeIcon, TelegramIcon } from "./icons";
-import { EDITOR_EMAIL, TELEGRAM_CHANNEL, VK_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
+import { TELEGRAM_CHANNEL, VK_CHANNEL, getFeed, type NewsPost } from "./lib/telegram";
 import { NAV_CATEGORIES, formatCount, plural } from "./lib/format";
 
 export const dynamic = "force-dynamic";
@@ -260,7 +260,6 @@ export default async function Home() {
               <div className="about-band__buttons">
                 <a className="button button--primary" href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer"><TelegramIcon /> Подписаться в Telegram</a>
                 <a className="button button--vk" href={VK_CHANNEL} target="_blank" rel="noreferrer">Мы ВКонтакте</a>
-                <a className="button button--glass" href={`mailto:${EDITOR_EMAIL}`}>Написать в редакцию</a>
               </div>
             </div>
             <dl className="about-band__stats">
@@ -288,7 +287,6 @@ export default async function Home() {
             <strong>Мы в сетях</strong>
             <a href={TELEGRAM_CHANNEL} target="_blank" rel="noreferrer">Telegram</a>
             <a href={VK_CHANNEL} target="_blank" rel="noreferrer">ВКонтакте</a>
-            <a href={`mailto:${EDITOR_EMAIL}`}>Редакция</a>
           </div>
           <p>© {new Date().getFullYear()} «Липецкий котёл»<br />Липецк и Липецкая область<br /><a href="#top">Наверх ↑</a></p>
         </div>
