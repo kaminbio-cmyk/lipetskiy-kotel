@@ -78,26 +78,40 @@ jobs:
           if [ "$(git rev-list --count HEAD 2>/dev/null || echo 0)" -gt 3000 ]; then
             git checkout -q --orphan fresh && git commit -q -m "Лента на $(date -u +%Y-%m-%dT%H:%MZ) (новая история)"
           fi
-          git push -f origin HEAD:refs/heads/site
+          # GitHub иногда отвечает ошибкой 500 (так было 25.11.2026 в 15:49Z) — повторяем выкладку
+          for attempt in 1 2 3 4 5; do
+            git push -f origin HEAD:refs/heads/site && exit 0
+            echo "GitHub не принял выкладку (попытка $attempt) — повтор через $((attempt * 20)) с"
+            sleep $((attempt * 20))
+          done
+          exit 1
 
   # Следующий запуск через ~10 минут. Таймер ожидания (9 мин) задан у окружения next-run в настройках хранилища.
+  # Если GitHub сбоит (25.11.2026 в 15:59Z он ответил 500, и цепочка оборвалась на 3 часа), повторяем каждые
+  # 2 минуты, пока не получится, — до 6 часов. schedule в этом хранилище срабатывает редко и на него надежды нет.
   next:
     needs: build
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 360
     environment: next-run
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Start the next run
         run: |
-          # Продолжает цепочку только самый новый запуск — так цепочка всегда одна, сколько бы запусков ни было.
-          newer=$(gh run list -R "$GITHUB_REPOSITORY" --workflow static-hosting.yml -L 30 --json databaseId \
-            --jq "[.[] | select(.databaseId > ${GITHUB_RUN_ID})] | length")
-          if [ "$newer" = "0" ]; then
-            gh workflow run static-hosting.yml -R "$GITHUB_REPOSITORY" --ref main
-            echo "Следующая сборка запущена"
-          else
-            echo "Есть более новый запуск ($newer) — он продолжит цепочку"
-          fi
+          for attempt in $(seq 1 175); do
+            # Продолжает цепочку только самый новый запуск — так цепочка всегда одна, сколько бы запусков ни было.
+            newer=$(gh run list -R "$GITHUB_REPOSITORY" --workflow static-hosting.yml -L 30 --json databaseId               --jq "[.[] | select(.databaseId > ${GITHUB_RUN_ID})] | length" 2>/dev/null || true)
+            if [ -n "$newer" ] && [ "$newer" != "0" ]; then
+              echo "Есть более новый запуск ($newer) — он продолжит цепочку"
+              exit 0
+            fi
+            if [ "$newer" = "0" ] && gh workflow run static-hosting.yml -R "$GITHUB_REPOSITORY" --ref main; then
+              echo "Следующая сборка запущена (попытка $attempt)"
+              exit 0
+            fi
+            echo "GitHub не ответил (попытка $attempt) — повтор через 2 минуты"
+            sleep 120
+          done
+          exit 1
