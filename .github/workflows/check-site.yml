@@ -1,0 +1,28 @@
+# Запрос к lk48.ru с машины GitHub — проверять сайт не со своего IP (хостинг SpaceWeb не должен видеть IP владельца).
+# Запуск (в Git Bash обязательно MSYS_NO_PATHCONV=1, иначе «/путь» испортится):
+#   MSYS_NO_PATHCONV=1 gh workflow run check-site.yml -R kaminbio-cmyk/lipetskiy-kotel -f paths="/stat/hit.php"
+# Хранилище открытое — журнал этого запуска виден всем, поэтому только безобидные адреса.
+name: Check lk48.ru from GitHub
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Адреса на lk48.ru через пробел, без домена (например /stat/hit.php)"
+        required: true
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PATHS: ${{ inputs.paths }}
+    steps:
+      - name: Requests
+        run: |
+          for p in $PATHS; do
+            case "$p" in /*) ;; *) echo "skip $p (must start with /)"; continue ;; esac
+            echo "=== https://lk48.ru$p"
+            curl -sS -m 60 -o /tmp/body -w "[HTTP %{http_code}]\n" "https://lk48.ru$p"
+            head -c 4000 /tmp/body; echo
+          done
