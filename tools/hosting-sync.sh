@@ -13,6 +13,38 @@ STAMP="$HOME/.kotel-sync.rev"
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 
+# Управление хостингом без подключения к нему (с 27.11.2026). Хостинг сам забирает закрытое хранилище
+# github.com/kaminbio-cmyk/lk48-ops, выполняет новые команды run/<имя>.sh (каждую один раз, до 4 минут, в домашней
+# папке) и кладёт вывод в out/<имя>.log. Ни с какого компьютера по SSH сюда заходить не нужно: SpaceWeb видит только,
+# как его сервер ходит на GitHub. Ключ ~/.ssh/lk48_ops создаётся здесь и сервер не покидает; его открытая половина
+# лежит в $SITE_DIR/_hostkey/lk48_ops.pub — она добавлена в lk48-ops как deploy key с правом записи.
+OPS_KEY="$HOME/.ssh/lk48_ops"
+OPS_DIR="$HOME/.lk48-ops"
+if [ ! -f "$OPS_KEY" ]; then
+  mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+  ssh-keygen -q -t ed25519 -N "" -C "lk48 ops (hosting lk48ru)" -f "$OPS_KEY"
+fi
+mkdir -p "$SITE_DIR/_hostkey" && cp -f "$OPS_KEY.pub" "$SITE_DIR/_hostkey/lk48_ops.pub" 2>/dev/null
+ops_git() { GIT_SSH_COMMAND="ssh -i $OPS_KEY -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new" git "$@"; }
+if [ -d "$OPS_DIR/.git" ] || ops_git clone -q "git@github.com:kaminbio-cmyk/lk48-ops.git" "$OPS_DIR" >/dev/null 2>&1; then
+  if cd "$OPS_DIR" && ops_git fetch -q origin main >/dev/null 2>&1 && git reset -q --hard origin/main; then
+    for task in run/*.sh; do
+      [ -e "$task" ] || continue
+      name="$(basename "$task" .sh)"
+      [ -e "out/$name.log" ] && continue
+      ( cd "$HOME" && timeout 240 bash "$OPS_DIR/$task" ) > "out/$name.log" 2>&1
+      echo "--- код завершения $? · $(date '+%F %T %Z')" >> "out/$name.log"
+      git add "out/$name.log"
+    done
+    if ! git diff --cached --quiet; then
+      git -c user.name="hosting lk48ru" -c user.email="ops@lk48.ru" commit -q -m "Ответы хостинга $(date '+%F %T')" \
+        && ops_git push -q origin HEAD:main >/dev/null 2>&1 \
+        || echo "$(date '+%F %T') ops: не удалось отправить ответы на GitHub"
+    fi
+  fi
+  cd "$HOME" || exit 1
+fi
+
 if [ ! -d "$SRC/.git" ]; then
   rm -rf "$SRC"
   git clone -q --depth 1 -b site "$REPO" "$SRC" || { echo "$(date '+%F %T') clone failed"; exit 1; }
@@ -59,6 +91,6 @@ fi
 [ "$REV" = "$(cat "$STAMP" 2>/dev/null)" ] && exit 0
 
 # Файлы хостинга (.htaccess, проверка домена) не трогаем; всё остальное — точная копия сборки.
-rsync -a --delete --exclude .git --exclude .build-info --exclude .history-day --exclude .htaccess --exclude .well-known --exclude cgi-bin "$SRC/" "$SITE_DIR/" \
+rsync -a --delete --exclude .git --exclude .build-info --exclude .history-day --exclude .htaccess --exclude .well-known --exclude cgi-bin --exclude _hostkey "$SRC/" "$SITE_DIR/" \
   && echo "$REV" > "$STAMP" \
   && echo "$(date '+%F %T') updated to $REV ($(cat .build-info 2>/dev/null | cut -c1-12))"
