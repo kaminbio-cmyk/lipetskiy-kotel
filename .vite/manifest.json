@@ -1,0 +1,123 @@
+{
+  "_format-DZD5yWxm.js": {
+    "file": "_next/static/chunks/format-DZD5yWxm.js",
+    "name": "format"
+  },
+  "_framework-BgSIrAUN.js": {
+    "file": "_next/static/chunks/framework-BgSIrAUN.js",
+    "name": "framework",
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js"
+    ]
+  },
+  "_rolldown-runtime-C60lm6uB.js": {
+    "file": "_next/static/chunks/rolldown-runtime-C60lm6uB.js",
+    "name": "rolldown-runtime"
+  },
+  "app/BriefFill.tsx": {
+    "file": "_next/static/chunks/BriefFill-D8mTEuJE.js",
+    "name": "BriefFill",
+    "src": "app/BriefFill.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/BriefTabs.tsx": {
+    "file": "_next/static/chunks/BriefTabs-Cui4JtxD.js",
+    "name": "BriefTabs",
+    "src": "app/BriefTabs.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/CategoryNav.tsx": {
+    "file": "_next/static/chunks/CategoryNav-4peSmOrx.js",
+    "name": "CategoryNav",
+    "src": "app/CategoryNav.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_format-DZD5yWxm.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/NewsGrid.tsx": {
+    "file": "_next/static/chunks/NewsGrid-B-rNscLj.js",
+    "name": "NewsGrid",
+    "src": "app/NewsGrid.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "app/SiteSearch.tsx",
+      "_format-DZD5yWxm.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/ReadsToday.tsx": {
+    "file": "_next/static/chunks/ReadsToday-nxPxRHLv.js",
+    "name": "ReadsToday",
+    "src": "app/ReadsToday.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_format-DZD5yWxm.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/SiteSearch.tsx": {
+    "file": "_next/static/chunks/SiteSearch-L0mTkRTd.js",
+    "name": "SiteSearch",
+    "src": "app/SiteSearch.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "app/TopicChips.tsx": {
+    "file": "_next/static/chunks/TopicChips-C4_-HAYk.js",
+    "name": "TopicChips",
+    "src": "app/TopicChips.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_format-DZD5yWxm.js",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "node_modules/vinext/dist/shims/layout-segment-context.js": {
+    "file": "_next/static/chunks/layout-segment-context-CeX_Gic5.js",
+    "name": "layout-segment-context",
+    "src": "node_modules/vinext/dist/shims/layout-segment-context.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "virtual:vinext-app-browser-entry",
+      "_framework-BgSIrAUN.js"
+    ]
+  },
+  "virtual:vinext-app-browser-entry": {
+    "file": "_next/static/chunks/index-CcnBGYPb.js",
+    "name": "index",
+    "src": "virtual:vinext-app-browser-entry",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-C60lm6uB.js",
+      "_framework-BgSIrAUN.js"
+    ],
+    "dynamicImports": [
+      "virtual:vinext-app-browser-entry",
+      "app/NewsGrid.tsx",
+      "node_modules/vinext/dist/shims/layout-segment-context.js",
+      "app/BriefTabs.tsx",
+      "app/BriefFill.tsx",
+      "app/ReadsToday.tsx",
+      "app/SiteSearch.tsx",
+      "app/TopicChips.tsx",
+      "app/CategoryNav.tsx"
+    ]
+  }
+}
